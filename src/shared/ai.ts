@@ -18,6 +18,7 @@ export interface GenerateRecipeResponse {
     name: string
     css: string
     js: string
+    domActions: string
     urlPattern: string
   }
   error?: string

@@ -662,6 +662,26 @@ body {
 
 .recipe-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
+.recipe-history {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.recipe-history-item:last-child { border-bottom: none; }
+
 .recipe-btn {
   padding: 6px 14px;
   border-radius: var(--radius-sm);

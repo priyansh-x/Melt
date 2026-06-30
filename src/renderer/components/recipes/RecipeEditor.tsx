@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Recipe, RecipeCreate } from '../../../shared/recipe'
 
 interface Props {
@@ -18,6 +18,26 @@ export default function RecipeEditor({ currentUrl, existingRecipe, onSave, onUpd
   const [css, setCss] = useState(existingRecipe?.css || '')
   const [js, setJs] = useState(existingRecipe?.js || '')
   const [activeTab, setActiveTab] = useState<'css' | 'js'>('css')
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState<any[]>([])
+
+  useEffect(() => {
+    if (showHistory && existingRecipe) {
+      (window as any).melt.recipes.getHistory(existingRecipe.id).then(setHistory)
+    }
+  }, [showHistory, existingRecipe])
+
+  async function handleRestore(historyId: number) {
+    if (!existingRecipe) return
+    const restored = await (window as any).melt.recipes.restoreVersion(existingRecipe.id, historyId)
+    if (restored) {
+      setName(restored.name)
+      setUrlPattern(restored.urlPattern)
+      setCss(restored.css)
+      setJs(restored.js)
+      setShowHistory(false)
+    }
+  }
 
   function handleSave() {
     if (!name.trim()) return
@@ -103,10 +123,32 @@ export default function RecipeEditor({ currentUrl, existingRecipe, onSave, onUpd
 
       <div className="recipe-actions">
         <button className="recipe-btn secondary" onClick={onCancel}>Cancel</button>
+        {isEditing && (
+          <button className="recipe-btn secondary" onClick={() => setShowHistory(!showHistory)}>
+            History
+          </button>
+        )}
         <button className="recipe-btn primary" onClick={handleSave} disabled={!name.trim()}>
           {isEditing ? 'Update recipe' : 'Save recipe'}
         </button>
       </div>
+      {showHistory && (
+        <div className="recipe-history">
+          <h4 style={{ margin: '0 0 6px', fontSize: 11, color: 'var(--text-secondary)' }}>Version History</h4>
+          {history.length === 0 ? (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>No previous versions</div>
+          ) : (
+            history.map(h => (
+              <div key={h.id} className="recipe-history-item">
+                <span>{new Date(h.savedAt).toLocaleString()}</span>
+                <button className="recipe-btn secondary" onClick={() => handleRestore(h.id)} style={{ fontSize: 10, padding: '2px 6px' }}>
+                  Restore
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }

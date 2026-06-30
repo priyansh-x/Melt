@@ -1,6 +1,6 @@
 import { ipcMain, dialog } from 'electron'
 import { RECIPE_IPC, RecipeCreate, RecipeUpdate } from '../../shared/recipe'
-import { getAllRecipes, getRecipesForUrl, createRecipe, updateRecipe, deleteRecipe, toggleRecipe } from './db'
+import { getAllRecipes, getRecipesForUrl, createRecipe, updateRecipe, deleteRecipe, toggleRecipe, getRecipeHistory, restoreRecipeVersion } from './db'
 import fs from 'fs'
 
 export function registerRecipeHandlers() {
@@ -10,6 +10,9 @@ export function registerRecipeHandlers() {
   ipcMain.handle(RECIPE_IPC.UPDATE, (_e, data: RecipeUpdate) => updateRecipe(data))
   ipcMain.handle(RECIPE_IPC.DELETE, (_e, id: string) => deleteRecipe(id))
   ipcMain.handle(RECIPE_IPC.TOGGLE, (_e, id: string) => toggleRecipe(id))
+
+  ipcMain.handle(RECIPE_IPC.GET_HISTORY, (_e, recipeId: string) => getRecipeHistory(recipeId))
+  ipcMain.handle(RECIPE_IPC.RESTORE_VERSION, (_e, recipeId: string, historyId: number) => restoreRecipeVersion(recipeId, historyId))
 
   ipcMain.handle(RECIPE_IPC.EXPORT, async () => {
     const recipes = getAllRecipes()

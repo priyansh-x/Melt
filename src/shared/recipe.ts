@@ -32,4 +32,6 @@ export const RECIPE_IPC = {
   INJECT: 'recipe:inject',
   EXPORT: 'recipe:export',
   IMPORT: 'recipe:import',
+  GET_HISTORY: 'recipe:get-history',
+  RESTORE_VERSION: 'recipe:restore-version',
 } as const

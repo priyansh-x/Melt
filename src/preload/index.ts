@@ -26,6 +26,10 @@ const api = {
       ipcRenderer.invoke(RECIPE_IPC.EXPORT),
     import: (): Promise<{ success: boolean; count?: number; error?: string }> =>
       ipcRenderer.invoke(RECIPE_IPC.IMPORT),
+    getHistory: (recipeId: string) =>
+      ipcRenderer.invoke(RECIPE_IPC.GET_HISTORY, recipeId),
+    restoreVersion: (recipeId: string, historyId: number) =>
+      ipcRenderer.invoke(RECIPE_IPC.RESTORE_VERSION, recipeId, historyId),
   },
 
   ai: {

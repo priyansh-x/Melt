@@ -26,6 +26,19 @@ function getDb(): Database.Database {
     )
   `)
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS recipe_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recipeId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      urlPattern TEXT NOT NULL,
+      css TEXT DEFAULT '',
+      js TEXT DEFAULT '',
+      domActions TEXT DEFAULT '[]',
+      savedAt INTEGER NOT NULL
+    )
+  `)
+
   // Migration: add domActions column if missing
   try {
     db.prepare("SELECT domActions FROM recipes LIMIT 1").get()
@@ -62,9 +75,24 @@ export function createRecipe(data: RecipeCreate): Recipe {
   return recipe
 }
 
+export function getRecipeHistory(recipeId: string): any[] {
+  return getDb().prepare('SELECT * FROM recipe_history WHERE recipeId = ? ORDER BY savedAt DESC LIMIT 20').all(recipeId)
+}
+
+export function restoreRecipeVersion(recipeId: string, historyId: number): Recipe | null {
+  const version = getDb().prepare('SELECT * FROM recipe_history WHERE id = ? AND recipeId = ?').get(historyId, recipeId) as any
+  if (!version) return null
+  return updateRecipe({ id: recipeId, name: version.name, urlPattern: version.urlPattern, css: version.css, js: version.js, domActions: version.domActions })
+}
+
 export function updateRecipe(data: RecipeUpdate): Recipe | null {
   const existing = getDb().prepare('SELECT * FROM recipes WHERE id = ?').get(data.id) as Recipe | undefined
   if (!existing) return null
+
+  getDb().prepare(`
+    INSERT INTO recipe_history (recipeId, name, urlPattern, css, js, domActions, savedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(existing.id, existing.name, existing.urlPattern, existing.css, existing.js, existing.domActions, Date.now())
 
   const updated = { ...existing, ...data, updatedAt: Date.now() }
   getDb().prepare(`

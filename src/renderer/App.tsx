@@ -340,7 +340,7 @@ export default function App() {
         urlPattern: res.recipe.urlPattern,
         css: res.recipe.css,
         js: res.recipe.js,
-        domActions: '[]',
+        domActions: res.recipe.domActions || '[]',
         enabled: true as any,
       })
 
