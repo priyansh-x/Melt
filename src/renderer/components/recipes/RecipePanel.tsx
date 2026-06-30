@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Recipe, RecipeCreate } from '../../../shared/recipe'
 import RecipeList from './RecipeList'
 import RecipeEditor from './RecipeEditor'
+import RecipeTemplates from './RecipeTemplates'
 
 interface Props {
   allRecipes: Recipe[]
@@ -13,6 +14,8 @@ interface Props {
   onClose: () => void
 }
 
+type Tab = 'list' | 'editor' | 'templates'
+
 export default function RecipePanel({
   allRecipes,
   activeRecipes,
@@ -22,8 +25,10 @@ export default function RecipePanel({
   onDeleteRecipe,
   onClose,
 }: Props) {
-  const [isEditing, setIsEditing] = useState(false)
+  const [tab, setTab] = useState<Tab>('list')
   const [statusMsg, setStatusMsg] = useState<string | null>(null)
+
+  const installedNames = useMemo(() => new Set(allRecipes.map(r => r.name)), [allRecipes])
 
   async function handleExport() {
     const result = await (window as any).melt.recipes.export()
@@ -58,29 +63,52 @@ export default function RecipePanel({
           <button className="recipe-panel-close" onClick={onClose}>×</button>
         </div>
       </div>
+
+      {/* Tabs */}
+      <div className="recipe-tabs" style={{ margin: '8px 12px 0' }}>
+        <button className={`recipe-tab ${tab === 'list' ? 'active' : ''}`} onClick={() => setTab('list')}>
+          My Recipes
+        </button>
+        <button className={`recipe-tab ${tab === 'templates' ? 'active' : ''}`} onClick={() => setTab('templates')}>
+          Templates
+        </button>
+      </div>
+
       {statusMsg && (
         <div style={{ padding: '6px 12px', fontSize: 11, color: '#22c55e', background: 'rgba(34,197,94,0.08)', borderBottom: '1px solid var(--border)' }}>
           {statusMsg}
         </div>
       )}
-      {isEditing ? (
-        <RecipeEditor
-          currentUrl={currentUrl}
-          onSave={(data) => {
-            onCreateRecipe(data)
-            setIsEditing(false)
-          }}
-          onCancel={() => setIsEditing(false)}
-        />
-      ) : (
-        <RecipeList
-          recipes={allRecipes}
-          activeRecipes={activeRecipes}
-          onToggle={onToggleRecipe}
-          onDelete={onDeleteRecipe}
-          onNew={() => setIsEditing(true)}
-        />
-      )}
+
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {tab === 'editor' ? (
+          <RecipeEditor
+            currentUrl={currentUrl}
+            onSave={(data) => {
+              onCreateRecipe(data)
+              setTab('list')
+            }}
+            onCancel={() => setTab('list')}
+          />
+        ) : tab === 'templates' ? (
+          <RecipeTemplates
+            onInstall={(data) => {
+              onCreateRecipe(data)
+              setStatusMsg('Recipe installed!')
+              setTimeout(() => setStatusMsg(null), 2000)
+            }}
+            installedNames={installedNames}
+          />
+        ) : (
+          <RecipeList
+            recipes={allRecipes}
+            activeRecipes={activeRecipes}
+            onToggle={onToggleRecipe}
+            onDelete={onDeleteRecipe}
+            onNew={() => setTab('editor')}
+          />
+        )}
+      </div>
     </div>
   )
 }

@@ -812,6 +812,66 @@ body {
 
 .find-bar-btn:hover { color: #aaa; background: var(--surface-2); }
 
+/* URL Suggestions dropdown */
+.url-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #1a1a1a;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.url-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background 80ms ease;
+}
+
+.url-suggestion:hover,
+.url-suggestion.selected {
+  background: var(--surface-3);
+}
+
+.url-suggestion-icon {
+  font-size: 12px;
+  color: #555;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.url-suggestion-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.url-suggestion-title {
+  font-size: 12px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-suggestion-url {
+  font-size: 10px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Visual Edit button */
 .visual-edit-btn { flex-shrink: 0; }
 .visual-edit-btn.active {
