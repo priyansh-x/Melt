@@ -24,9 +24,10 @@ export default function AISidebar({ currentUrl, pageTitle, getPageHtml, onRecipe
     inputRef.current?.focus()
   }, [])
 
-  async function handleSend() {
-    if (!input.trim() || loading) return
-    const userMsg: ChatMessage = { role: 'user', content: input.trim() }
+  async function handleSend(quickMessage?: string) {
+    const text = quickMessage || input.trim()
+    if (!text || loading) return
+    const userMsg: ChatMessage = { role: 'user', content: text }
     const newMessages = [...messages, userMsg]
     setMessages(newMessages)
     setInput('')
@@ -96,6 +97,11 @@ export default function AISidebar({ currentUrl, pageTitle, getPageHtml, onRecipe
               <li>Add custom features</li>
               <li>Answer questions about the page</li>
             </ul>
+            <div className="ai-quick-actions">
+              {['Make it dark mode', 'Hide all ads', 'Make text bigger', 'Simplify the layout'].map(q => (
+                <button key={q} className="ai-quick-chip" onClick={() => handleSend(q)}>{q}</button>
+              ))}
+            </div>
             <p className="ai-sidebar-hint">Changes persist every time you visit this site.</p>
           </div>
         )}
