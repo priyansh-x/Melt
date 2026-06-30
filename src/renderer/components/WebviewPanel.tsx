@@ -8,9 +8,10 @@ interface Props {
   isActive: boolean
   onUpdate: (id: string, updates: Partial<TabData>) => void
   recipesToInject: Recipe[]
+  onNewTab?: (url: string) => void
 }
 
-const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdate, recipesToInject }, ref) => {
+const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdate, recipesToInject, onNewTab }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
   const tabId = useRef(tab.id)
@@ -59,6 +60,13 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
         canGoForward: wv.canGoForward(),
       })
       ;(window as any).melt.history.add(e.url, wv.getTitle?.() || '')
+    })
+
+    wv.addEventListener('new-window', (e: any) => {
+      e.preventDefault()
+      if (e.url && onNewTab) {
+        onNewTab(e.url)
+      }
     })
 
     wv.addEventListener('did-navigate-in-page', (e: any) => {

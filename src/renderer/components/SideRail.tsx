@@ -5,11 +5,12 @@ interface Props {
   onXrayClick: () => void
   onHistoryClick: () => void
   onBookmarksClick: () => void
+  onDevToolsClick: () => void
   recipeCount: number
   xrayActive: boolean
 }
 
-export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, onXrayClick, onHistoryClick, onBookmarksClick, recipeCount, xrayActive }: Props) {
+export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, onXrayClick, onHistoryClick, onBookmarksClick, onDevToolsClick, recipeCount, xrayActive }: Props) {
   return (
     <div className="side-rail">
       <div className="rail-top">
@@ -61,6 +62,12 @@ export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, o
       </div>
 
       <div className="rail-bottom">
+        <button className="rail-btn" aria-label="DevTools" onClick={onDevToolsClick} title="Toggle DevTools">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+        </button>
         <button className="rail-btn" aria-label="Settings" onClick={onSettingsClick}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" />

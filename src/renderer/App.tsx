@@ -12,6 +12,7 @@ import HistoryPanel from './components/HistoryPanel'
 import BookmarksPanel from './components/BookmarksPanel'
 import NewTabPage from './components/NewTabPage'
 import DownloadBar from './components/DownloadBar'
+import ShortcutsOverlay from './components/ShortcutsOverlay'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
@@ -31,9 +32,23 @@ export default function App() {
   const findQueryRef = useRef('')
   const [visualEditActive, setVisualEditActive] = useState(false)
   const [xrayActive, setXrayActive] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState(0)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiResult, setAiResult] = useState<string | null>(null)
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault()
+        setShowShortcuts(prev => !prev)
+      }
+      if (e.key === 'Escape' && showShortcuts) setShowShortcuts(false)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [showShortcuts])
 
   const getActiveWebview = useCallback((): Electron.WebviewTag | null => {
     const container = containerRefs.current.get(activeTabId)
@@ -365,6 +380,13 @@ export default function App() {
         onXrayClick={toggleXray}
         onHistoryClick={() => togglePanel('history')}
         onBookmarksClick={() => togglePanel('bookmarks')}
+        onDevToolsClick={() => {
+          const wv = getActiveWebview()
+          if (wv) {
+            if (wv.isDevToolsOpened()) wv.closeDevTools()
+            else wv.openDevTools()
+          }
+        }}
         recipeCount={activeRecipes.length}
         xrayActive={xrayActive}
       />
@@ -383,6 +405,30 @@ export default function App() {
           onVisualEditToggle={toggleVisualEdit}
           isVisualEditActive={visualEditActive}
           urlBarRef={urlBarRef}
+          zoomLevel={zoomLevel}
+          onZoomIn={() => {
+            const wv = getActiveWebview()
+            if (wv) {
+              const next = zoomLevel + 1
+              setZoomLevel(next)
+              wv.setZoomLevel(next)
+            }
+          }}
+          onZoomOut={() => {
+            const wv = getActiveWebview()
+            if (wv) {
+              const next = zoomLevel - 1
+              setZoomLevel(next)
+              wv.setZoomLevel(next)
+            }
+          }}
+          onZoomReset={() => {
+            const wv = getActiveWebview()
+            if (wv) {
+              setZoomLevel(0)
+              wv.setZoomLevel(0)
+            }
+          }}
         />
         <TabStrip
           tabs={tabs}
@@ -433,6 +479,7 @@ export default function App() {
                   isActive={tab.id === activeTabId}
                   onUpdate={updateTab}
                   recipesToInject={tab.id === activeTabId ? activeRecipes : []}
+                  onNewTab={(url) => newTab(url)}
                   ref={(el) => {
                     if (el) containerRefs.current.set(tab.id, el)
                     else containerRefs.current.delete(tab.id)
@@ -488,6 +535,9 @@ export default function App() {
       </div>
       {visualEditActive && (
         <div className="xray-indicator">Visual Edit Mode</div>
+      )}
+      {showShortcuts && (
+        <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />
       )}
       {xrayActive && (
         <div className="xray-indicator" style={{ bottom: '80px' }}>X-ray Mode</div>

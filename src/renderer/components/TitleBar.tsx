@@ -20,6 +20,10 @@ interface Props {
   onVisualEditToggle: () => void
   isVisualEditActive: boolean
   urlBarRef?: RefObject<HTMLInputElement | null>
+  zoomLevel: number
+  onZoomIn: () => void
+  onZoomOut: () => void
+  onZoomReset: () => void
 }
 
 export default function TitleBar({
@@ -36,6 +40,10 @@ export default function TitleBar({
   onVisualEditToggle,
   isVisualEditActive,
   urlBarRef,
+  zoomLevel,
+  onZoomIn,
+  onZoomOut,
+  onZoomReset,
 }: Props) {
   const [inputValue, setInputValue] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -192,6 +200,20 @@ export default function TitleBar({
           </div>
         )}
       </div>
+
+      {zoomLevel !== 0 && (
+        <div className="zoom-controls">
+          <button className="nav-btn" onClick={onZoomOut} title="Zoom out">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/></svg>
+          </button>
+          <button className="zoom-level" onClick={onZoomReset} title="Reset zoom">
+            {Math.round((1 + zoomLevel * 0.1) * 100)}%
+          </button>
+          <button className="nav-btn" onClick={onZoomIn} title="Zoom in">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      )}
 
       <button
         className={`nav-btn visual-edit-btn ${isVisualEditActive ? 'active' : ''}`}
