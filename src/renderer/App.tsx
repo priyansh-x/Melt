@@ -24,6 +24,7 @@ import { getVisualEditScript } from './visual-edit/inject'
 import { getReaderModeScript } from './visual-edit/reader-mode'
 import { getCopyAsMarkdownScript } from './visual-edit/copy-markdown'
 import { getCssInspectorScript } from './visual-edit/css-inspector'
+import { getPageStatsScript } from './visual-edit/page-stats'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
@@ -674,6 +675,7 @@ export default function App() {
           { id: 'xray', label: 'Toggle X-ray', category: 'Mode', action: toggleXray },
           { id: 'reader', label: 'Reader Mode', category: 'Mode', action: toggleReaderMode },
           { id: 'css-inspect', label: 'CSS Inspector', category: 'Mode', action: toggleCssInspector },
+          { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
           { id: 'screenshot', label: 'Take Screenshot', category: 'Tool', action: takeScreenshot },
           { id: 'copy-md', label: 'Copy Page as Markdown', category: 'Tool', action: copyAsMarkdown },
           { id: 'pip', label: 'Picture-in-Picture', category: 'Tool', action: togglePictureInPicture },
