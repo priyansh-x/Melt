@@ -27,6 +27,7 @@ import { getCssInspectorScript } from './visual-edit/css-inspector'
 import { getPageStatsScript } from './visual-edit/page-stats'
 import { getOutlineViewScript } from './visual-edit/outline-view'
 import { getColorPickerScript } from './visual-edit/color-picker'
+import { getHighlighterScript } from './visual-edit/highlighter'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
@@ -684,9 +685,24 @@ export default function App() {
           { id: 'xray', label: 'Toggle X-ray', category: 'Mode', action: toggleXray },
           { id: 'reader', label: 'Reader Mode', category: 'Mode', action: toggleReaderMode },
           { id: 'css-inspect', label: 'CSS Inspector', category: 'Mode', action: toggleCssInspector },
+          { id: 'highlighter', label: 'Text Highlighter', category: 'Mode', action: () => getActiveWebview()?.executeJavaScript(getHighlighterScript()) },
           { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
           { id: 'outline', label: 'Page Outline', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getOutlineViewScript()) },
           { id: 'color-picker', label: 'Color Picker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getColorPickerScript()) },
+          { id: 'clip-selection', label: 'Clip Selection as Note', category: 'Tool', action: async () => {
+            const wv = getActiveWebview()
+            if (!wv) return
+            const text = await wv.executeJavaScript('window.getSelection()?.toString() || ""')
+            if (text.trim()) {
+              await (window as any).melt.notes.add(activeTab?.url || '', text.trim())
+              togglePanel('notes')
+            }
+          }},
+          { id: 'reading-list', label: 'Add to Reading List', category: 'Tool', action: async () => {
+            if (activeTab?.url && activeTab.url !== 'melt://newtab') {
+              await (window as any).melt.notes.add('melt://reading-list', `${activeTab.title}\n${activeTab.url}`)
+            }
+          }},
           { id: 'scroll-top', label: 'Scroll to Top', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:0,behavior:"smooth"})') },
           { id: 'scroll-bottom', label: 'Scroll to Bottom', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"})') },
           { id: 'presentation', label: 'Presentation Mode', category: 'View', action: () => setPresentationMode(p => !p) },
