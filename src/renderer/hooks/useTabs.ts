@@ -1,71 +1,65 @@
-import { useState, useEffect, useCallback } from 'react'
-import { TabInfo } from '../../shared/ipc'
+import { useState, useCallback } from 'react'
+import { TabData } from '../../shared/ipc'
+
+let tabCounter = 0
+
+function createTab(url = 'https://www.google.com'): TabData {
+  return {
+    id: `tab-${++tabCounter}`,
+    url,
+    title: 'New Tab',
+    favicon: '',
+    isLoading: true,
+    canGoBack: false,
+    canGoForward: false,
+  }
+}
 
 export function useTabs() {
-  const [tabs, setTabs] = useState<TabInfo[]>([])
-  const [activeTabId, setActiveTabId] = useState<string | null>(null)
-  const [canGoBack, setCanGoBack] = useState(false)
-  const [canGoForward, setCanGoForward] = useState(false)
-  const [currentUrl, setCurrentUrl] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [tabs, setTabs] = useState<TabData[]>(() => [createTab()])
+  const [activeTabId, setActiveTabId] = useState<string>('tab-1')
 
-  useEffect(() => {
-    const { melt } = window
+  const activeTab = tabs.find((t) => t.id === activeTabId)
 
-    melt.onTabList((tabList, activeId) => {
-      setTabs(tabList)
-      setActiveTabId(activeId)
-    })
-
-    melt.onActiveTab((tabId) => {
-      setActiveTabId(tabId)
-    })
-
-    melt.onUrlUpdated((tabId, url) => {
-      setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, url } : t)))
-      setCurrentUrl(url)
-    })
-
-    melt.onTitleUpdated((tabId, title) => {
-      setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, title } : t)))
-    })
-
-    melt.onFaviconUpdated((tabId, favicon) => {
-      setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, favicon } : t)))
-    })
-
-    melt.onLoadingChanged((tabId, loading) => {
-      setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, isLoading: loading } : t)))
-      setIsLoading(loading)
-    })
-
-    melt.onCanGoBack((can) => setCanGoBack(can))
-    melt.onCanGoForward((can) => setCanGoForward(can))
-
-    melt.newTab()
+  const newTab = useCallback((url?: string) => {
+    const tab = createTab(url)
+    setTabs((prev) => [...prev, tab])
+    setActiveTabId(tab.id)
   }, [])
 
-  const navigate = useCallback((url: string) => window.melt.navigate(url), [])
-  const goBack = useCallback(() => window.melt.goBack(), [])
-  const goForward = useCallback(() => window.melt.goForward(), [])
-  const reload = useCallback(() => window.melt.reload(), [])
-  const newTab = useCallback((url?: string) => window.melt.newTab(url), [])
-  const closeTab = useCallback((id: string) => window.melt.closeTab(id), [])
-  const switchTab = useCallback((id: string) => window.melt.switchTab(id), [])
+  const closeTab = useCallback((id: string) => {
+    setTabs((prev) => {
+      const next = prev.filter((t) => t.id !== id)
+      if (next.length === 0) {
+        const fresh = createTab()
+        setActiveTabId(fresh.id)
+        return [fresh]
+      }
+      return next
+    })
+    setActiveTabId((currentActive) => {
+      if (currentActive !== id) return currentActive
+      const idx = tabs.findIndex((t) => t.id === id)
+      const fallback = tabs[idx - 1] || tabs[idx + 1]
+      return fallback?.id || tabs[0]?.id || ''
+    })
+  }, [tabs])
+
+  const switchTab = useCallback((id: string) => {
+    setActiveTabId(id)
+  }, [])
+
+  const updateTab = useCallback((id: string, updates: Partial<TabData>) => {
+    setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)))
+  }, [])
 
   return {
     tabs,
     activeTabId,
-    canGoBack,
-    canGoForward,
-    currentUrl,
-    isLoading,
-    navigate,
-    goBack,
-    goForward,
-    reload,
+    activeTab,
     newTab,
     closeTab,
     switchTab,
+    updateTab,
   }
 }

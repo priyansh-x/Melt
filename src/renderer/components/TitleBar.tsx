@@ -49,27 +49,15 @@ export default function TitleBar({
 
   return (
     <div className="title-bar">
-      {/* Drag region spacer for traffic lights */}
       <div className="drag-spacer" />
 
-      {/* Nav buttons */}
       <div className="nav-buttons">
-        <button
-          className="nav-btn"
-          onClick={onBack}
-          disabled={!canGoBack}
-          aria-label="Go back"
-        >
+        <button className="nav-btn" onClick={onBack} disabled={!canGoBack} aria-label="Go back">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-        <button
-          className="nav-btn"
-          onClick={onForward}
-          disabled={!canGoForward}
-          aria-label="Go forward"
-        >
+        <button className="nav-btn" onClick={onForward} disabled={!canGoForward} aria-label="Go forward">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18l6-6-6-6" />
           </svg>
@@ -88,7 +76,6 @@ export default function TitleBar({
         </button>
       </div>
 
-      {/* URL / Prompt bar */}
       <div className={`url-bar ${isFocused ? 'focused' : ''}`}>
         <svg className="url-bar-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8" />
@@ -107,7 +94,6 @@ export default function TitleBar({
         />
       </div>
 
-      {/* Loading bar */}
       {isLoading && <div className="loading-bar" />}
     </div>
   )
