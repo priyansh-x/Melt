@@ -26,6 +26,7 @@ import { getCopyAsMarkdownScript } from './visual-edit/copy-markdown'
 import { getCssInspectorScript } from './visual-edit/css-inspector'
 import { getPageStatsScript } from './visual-edit/page-stats'
 import { getOutlineViewScript } from './visual-edit/outline-view'
+import { getColorPickerScript } from './visual-edit/color-picker'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
@@ -678,6 +679,7 @@ export default function App() {
           { id: 'css-inspect', label: 'CSS Inspector', category: 'Mode', action: toggleCssInspector },
           { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
           { id: 'outline', label: 'Page Outline', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getOutlineViewScript()) },
+          { id: 'color-picker', label: 'Color Picker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getColorPickerScript()) },
           { id: 'scroll-top', label: 'Scroll to Top', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:0,behavior:"smooth"})') },
           { id: 'scroll-bottom', label: 'Scroll to Bottom', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"})') },
           { id: 'fullscreen', label: 'Toggle Fullscreen', category: 'View', action: () => {
