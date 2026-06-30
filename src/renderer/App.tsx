@@ -19,6 +19,7 @@ import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
 import { GenerateRecipeRequest } from '../shared/ai'
 import { getVisualEditScript } from './visual-edit/inject'
+import { getReaderModeScript } from './visual-edit/reader-mode'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | null
 
@@ -298,6 +299,26 @@ export default function App() {
     })()`
   }
 
+  async function toggleReaderMode() {
+    const wv = getActiveWebview()
+    if (wv) {
+      await wv.executeJavaScript(getReaderModeScript())
+    }
+  }
+
+  async function takeScreenshot() {
+    const wv = getActiveWebview()
+    if (!wv) return
+    try {
+      const image = await wv.capturePage()
+      const dataUrl = image.toDataURL()
+      const link = document.createElement('a')
+      link.download = `melt-screenshot-${Date.now()}.png`
+      link.href = dataUrl
+      link.click()
+    } catch {}
+  }
+
   // ─── Revert All ───
   async function handleRevertAll() {
     for (const r of activeRecipes) {
@@ -389,6 +410,8 @@ export default function App() {
             else wv.openDevTools()
           }
         }}
+        onReaderMode={toggleReaderMode}
+        onScreenshot={takeScreenshot}
         recipeCount={activeRecipes.length}
         xrayActive={xrayActive}
       />

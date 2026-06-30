@@ -6,11 +6,13 @@ interface Props {
   onHistoryClick: () => void
   onBookmarksClick: () => void
   onDevToolsClick: () => void
+  onReaderMode: () => void
+  onScreenshot: () => void
   recipeCount: number
   xrayActive: boolean
 }
 
-export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, onXrayClick, onHistoryClick, onBookmarksClick, onDevToolsClick, recipeCount, xrayActive }: Props) {
+export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, onXrayClick, onHistoryClick, onBookmarksClick, onDevToolsClick, onReaderMode, onScreenshot, recipeCount, xrayActive }: Props) {
   return (
     <div className="side-rail">
       <div className="rail-top">
@@ -62,6 +64,18 @@ export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, o
       </div>
 
       <div className="rail-bottom">
+        <button className="rail-btn" aria-label="Reader Mode" onClick={onReaderMode} title="Reader Mode">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" />
+            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" />
+          </svg>
+        </button>
+        <button className="rail-btn" aria-label="Screenshot" onClick={onScreenshot} title="Capture Screenshot">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+        </button>
         <button className="rail-btn" aria-label="DevTools" onClick={onDevToolsClick} title="Toggle DevTools">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="16 18 22 12 16 6" />
