@@ -5,3 +5,5 @@ declare global {
     melt: MeltAPI
   }
 }
+
+export {}
