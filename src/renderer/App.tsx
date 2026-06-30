@@ -690,6 +690,19 @@ export default function App() {
               newTab(translateUrl)
             }
           }},
+          { id: 'save-session', label: 'Save Current Session', category: 'Session', action: async () => {
+            const name = `Session ${new Date().toLocaleString()}`
+            const tabData = tabs.filter(t => t.url !== 'melt://newtab').map(t => ({ url: t.url, title: t.title }))
+            if (tabData.length) await (window as any).melt.sessions.save(name, tabData)
+          }},
+          { id: 'restore-session', label: 'Restore Last Session', category: 'Session', action: async () => {
+            const sessions = await (window as any).melt.sessions.getAll()
+            if (sessions.length > 0) {
+              const latest = sessions[0]
+              const tabData = JSON.parse(latest.tabs)
+              tabData.forEach((t: { url: string }) => newTab(t.url))
+            }
+          }},
           { id: 'view-source', label: 'View Page Source', category: 'Dev', action: () => {
             if (activeTab?.url) newTab('view-source:' + activeTab.url)
           }},

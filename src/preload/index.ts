@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { RECIPE_IPC, Recipe, RecipeCreate, RecipeUpdate } from '../shared/recipe'
 import { AI_IPC, GenerateRecipeRequest, GenerateRecipeResponse, ChatRequest, ChatResponse } from '../shared/ai'
-import { HISTORY_IPC, BOOKMARK_IPC, NOTES_IPC, HistoryEntry, Bookmark } from '../shared/history'
+import { HISTORY_IPC, BOOKMARK_IPC, NOTES_IPC, SESSION_IPC, HistoryEntry, Bookmark } from '../shared/history'
 import { DOWNLOAD_IPC, DownloadItem } from '../shared/downloads'
 
 const api = {
@@ -63,6 +63,15 @@ const api = {
       ipcRenderer.invoke(BOOKMARK_IPC.REMOVE, url),
     isBookmarked: (url: string): Promise<boolean> =>
       ipcRenderer.invoke(BOOKMARK_IPC.IS_BOOKMARKED, url),
+  },
+
+  sessions: {
+    save: (name: string, tabs: { url: string; title: string }[]) =>
+      ipcRenderer.invoke(SESSION_IPC.SAVE, name, tabs),
+    getAll: () =>
+      ipcRenderer.invoke(SESSION_IPC.GET_ALL),
+    delete: (id: number) =>
+      ipcRenderer.invoke(SESSION_IPC.DELETE, id),
   },
 
   notes: {

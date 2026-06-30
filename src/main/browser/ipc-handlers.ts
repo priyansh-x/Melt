@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { HISTORY_IPC, BOOKMARK_IPC, NOTES_IPC } from '../../shared/history'
+import { HISTORY_IPC, BOOKMARK_IPC, NOTES_IPC, SESSION_IPC } from '../../shared/history'
 import * as db from './db'
 
 export function registerBrowserHandlers() {
@@ -18,4 +18,8 @@ export function registerBrowserHandlers() {
   ipcMain.handle(NOTES_IPC.UPDATE, (_e, id: number, note: string) => db.updateNote(id, note))
   ipcMain.handle(NOTES_IPC.DELETE, (_e, id: number) => db.deleteNote(id))
   ipcMain.handle(NOTES_IPC.GET_ALL, () => db.getAllNotes())
+
+  ipcMain.handle(SESSION_IPC.SAVE, (_e, name: string, tabs: { url: string; title: string }[]) => db.saveSession(name, tabs))
+  ipcMain.handle(SESSION_IPC.GET_ALL, () => db.getSavedSessions())
+  ipcMain.handle(SESSION_IPC.DELETE, (_e, id: number) => db.deleteSavedSession(id))
 }

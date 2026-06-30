@@ -112,3 +112,51 @@ export function deleteNote(id: number) {
 export function getAllNotes(): PageNote[] {
   return getDb().prepare('SELECT * FROM page_notes ORDER BY updatedAt DESC').all() as PageNote[]
 }
+
+// Sessions
+export interface SavedSession {
+  id: number
+  name: string
+  tabs: string // JSON array of {url, title}
+  createdAt: string
+}
+
+;(function migrateSessionsTable() {
+  try { getDb().prepare('SELECT 1 FROM saved_sessions LIMIT 1').get() }
+  catch {
+    getDb().exec(`
+      CREATE TABLE IF NOT EXISTS saved_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        tabs TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    `)
+  }
+})
+
+export function saveSession(name: string, tabs: { url: string; title: string }[]): SavedSession {
+  const db = getDb()
+  try { db.prepare('SELECT 1 FROM saved_sessions LIMIT 1').get() }
+  catch {
+    db.exec(`CREATE TABLE IF NOT EXISTS saved_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      tabs TEXT NOT NULL,
+      createdAt TEXT NOT NULL
+    )`)
+  }
+  const now = new Date().toISOString()
+  const result = db.prepare('INSERT INTO saved_sessions (name, tabs, createdAt) VALUES (?, ?, ?)').run(name, JSON.stringify(tabs), now)
+  return { id: result.lastInsertRowid as number, name, tabs: JSON.stringify(tabs), createdAt: now }
+}
+
+export function getSavedSessions(): SavedSession[] {
+  const db = getDb()
+  try { return db.prepare('SELECT * FROM saved_sessions ORDER BY createdAt DESC').all() as SavedSession[] }
+  catch { return [] }
+}
+
+export function deleteSavedSession(id: number) {
+  try { getDb().prepare('DELETE FROM saved_sessions WHERE id = ?').run(id) } catch {}
+}

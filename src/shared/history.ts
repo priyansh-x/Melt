@@ -28,6 +28,12 @@ export const NOTES_IPC = {
   GET_ALL: 'notes:get-all',
 } as const
 
+export const SESSION_IPC = {
+  SAVE: 'session:save',
+  GET_ALL: 'session:get-all',
+  DELETE: 'session:delete',
+} as const
+
 export const BOOKMARK_IPC = {
   GET_ALL: 'bookmark:get-all',
   ADD: 'bookmark:add',
