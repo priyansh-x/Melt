@@ -12,6 +12,7 @@ interface ShortcutActions {
   zoomIn: () => void
   zoomOut: () => void
   zoomReset: () => void
+  find: () => void
 }
 
 export function useShortcuts(actions: ShortcutActions) {
@@ -30,5 +31,6 @@ export function useShortcuts(actions: ShortcutActions) {
     melt.onShortcut('zoom-in', actions.zoomIn)
     melt.onShortcut('zoom-out', actions.zoomOut)
     melt.onShortcut('zoom-reset', actions.zoomReset)
+    melt.onShortcut('find', actions.find)
   }, [actions])
 }

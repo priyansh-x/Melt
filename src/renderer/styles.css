@@ -775,6 +775,47 @@ body {
   font-size: 12px;
 }
 
+/* Find Bar */
+.find-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--surface-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.find-bar-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  width: 220px;
+}
+
+.find-bar-input:focus { border-color: var(--border-hover); }
+
+.find-bar-btn {
+  background: transparent;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+}
+
+.find-bar-btn:hover { color: #aaa; background: var(--surface-2); }
+
+/* Bookmark button */
+.bookmark-btn { flex-shrink: 0; }
+.bookmark-btn.active { color: var(--accent) !important; }
+
 .prompt-bar-success {
   margin-top: 6px;
   padding: 6px 12px;

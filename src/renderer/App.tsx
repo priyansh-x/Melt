@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo, useState } from 'react'
+import { useCallback, useRef, useMemo, useState, useEffect } from 'react'
 import TitleBar from './components/TitleBar'
 import TabStrip from './components/TabStrip'
 import SideRail from './components/SideRail'
@@ -6,6 +6,7 @@ import WebviewPanel from './components/WebviewPanel'
 import RecipePanel from './components/recipes/RecipePanel'
 import PromptBar from './components/PromptBar'
 import SettingsPanel from './components/SettingsPanel'
+import FindBar from './components/FindBar'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
@@ -18,6 +19,9 @@ export default function App() {
   const urlBarRef = useRef<HTMLInputElement>(null)
   const [showRecipePanel, setShowRecipePanel] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [showFindBar, setShowFindBar] = useState(false)
+  const findQueryRef = useRef('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiResult, setAiResult] = useState<string | null>(null)
@@ -83,9 +87,31 @@ export default function App() {
     zoomReset: () => {
       getActiveWebview()?.setZoomLevel(0)
     },
+    find: () => setShowFindBar(true),
   }), [tabs, activeTabId, newTab, closeTab, switchTab, getActiveWebview])
 
   useShortcuts(shortcuts)
+
+  useEffect(() => {
+    const url = activeTab?.url
+    if (url && url !== 'about:blank') {
+      (window as any).melt.bookmarks.isBookmarked(url).then(setIsBookmarked)
+    } else {
+      setIsBookmarked(false)
+    }
+  }, [activeTab?.url])
+
+  async function handleBookmarkToggle() {
+    const tab = activeTab
+    if (!tab || !tab.url || tab.url === 'about:blank') return
+    if (isBookmarked) {
+      await (window as any).melt.bookmarks.remove(tab.url)
+      setIsBookmarked(false)
+    } else {
+      await (window as any).melt.bookmarks.add(tab.url, tab.title, tab.favicon || '')
+      setIsBookmarked(true)
+    }
+  }
 
   async function handleAiPrompt(prompt: string) {
     const wv = getActiveWebview()
@@ -148,6 +174,8 @@ export default function App() {
           onBack={handleBack}
           onForward={handleForward}
           onReload={handleReload}
+          onBookmarkToggle={handleBookmarkToggle}
+          isBookmarked={isBookmarked}
           urlBarRef={urlBarRef}
         />
         <TabStrip
@@ -156,6 +184,22 @@ export default function App() {
           onSwitch={switchTab}
           onClose={closeTab}
           onNew={() => newTab()}
+        />
+        <FindBar
+          visible={showFindBar}
+          onFind={(text) => {
+            findQueryRef.current = text
+            const wv = getActiveWebview()
+            if (!wv) return
+            if (text) wv.findInPage(text)
+            else wv.stopFindInPage('clearSelection')
+          }}
+          onFindNext={() => { if (findQueryRef.current) getActiveWebview()?.findInPage(findQueryRef.current, { forward: true, findNext: true }) }}
+          onFindPrev={() => { if (findQueryRef.current) getActiveWebview()?.findInPage(findQueryRef.current, { forward: false, findNext: true }) }}
+          onClose={() => {
+            setShowFindBar(false)
+            getActiveWebview()?.stopFindInPage('clearSelection')
+          }}
         />
         <div className="content-area">
           <div className="webview-container">

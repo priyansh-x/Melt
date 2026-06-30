@@ -3,6 +3,7 @@ import path from 'path'
 import { APP_NAME } from '../shared/constants'
 import { registerRecipeHandlers } from './recipes/ipc-handlers'
 import { registerAIHandlers } from './ai/ipc-handlers'
+import { registerBrowserHandlers } from './browser/ipc-handlers'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -82,6 +83,12 @@ function buildMenu() {
         { role: 'copy' },
         { role: 'paste' },
         { role: 'selectAll' },
+        { type: 'separator' },
+        {
+          label: 'Find in Page',
+          accelerator: 'CmdOrCtrl+F',
+          click: () => send('shortcut:find'),
+        },
       ],
     },
     {
@@ -162,6 +169,7 @@ function buildMenu() {
 app.whenReady().then(() => {
   registerRecipeHandlers()
   registerAIHandlers()
+  registerBrowserHandlers()
   buildMenu()
   createWindow()
 })

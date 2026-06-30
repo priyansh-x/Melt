@@ -1,4 +1,4 @@
-import { useState, useRef, KeyboardEvent, RefObject } from 'react'
+import { useState, useRef, useEffect, KeyboardEvent, RefObject } from 'react'
 
 interface Props {
   url: string
@@ -9,6 +9,8 @@ interface Props {
   onBack: () => void
   onForward: () => void
   onReload: () => void
+  onBookmarkToggle: () => void
+  isBookmarked: boolean
   urlBarRef?: RefObject<HTMLInputElement | null>
 }
 
@@ -21,6 +23,8 @@ export default function TitleBar({
   onBack,
   onForward,
   onReload,
+  onBookmarkToggle,
+  isBookmarked,
   urlBarRef,
 }: Props) {
   const [inputValue, setInputValue] = useState('')
@@ -96,6 +100,16 @@ export default function TitleBar({
           spellCheck={false}
         />
       </div>
+
+      <button
+        className={`nav-btn bookmark-btn ${isBookmarked ? 'active' : ''}`}
+        onClick={onBookmarkToggle}
+        aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill={isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" />
+        </svg>
+      </button>
 
       {isLoading && <div className="loading-bar" />}
     </div>

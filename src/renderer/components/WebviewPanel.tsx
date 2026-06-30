@@ -57,6 +57,7 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
         canGoBack: wv.canGoBack(),
         canGoForward: wv.canGoForward(),
       })
+      ;(window as any).melt.history.add(e.url, wv.getTitle?.() || '')
     })
 
     wv.addEventListener('did-navigate-in-page', (e: any) => {
