@@ -6,4 +6,5 @@ export interface TabData {
   isLoading: boolean
   canGoBack: boolean
   canGoForward: boolean
+  isPinned: boolean
 }

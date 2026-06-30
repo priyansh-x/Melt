@@ -3,15 +3,16 @@ import { TabData } from '../../shared/ipc'
 
 let tabCounter = 0
 
-function createTab(url = 'https://www.google.com'): TabData {
+function createTab(url = 'melt://newtab'): TabData {
   return {
     id: `tab-${++tabCounter}`,
     url,
     title: 'New Tab',
     favicon: '',
-    isLoading: true,
+    isLoading: false,
     canGoBack: false,
     canGoForward: false,
+    isPinned: false,
   }
 }
 
@@ -29,6 +30,9 @@ export function useTabs() {
 
   const closeTab = useCallback((id: string) => {
     setTabs((prev) => {
+      const tab = prev.find(t => t.id === id)
+      if (tab?.isPinned) return prev
+
       const next = prev.filter((t) => t.id !== id)
       if (next.length === 0) {
         const fresh = createTab()
@@ -53,6 +57,24 @@ export function useTabs() {
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)))
   }, [])
 
+  const pinTab = useCallback((id: string) => {
+    setTabs((prev) => {
+      const updated = prev.map(t => t.id === id ? { ...t, isPinned: !t.isPinned } : t)
+      // Sort: pinned tabs first
+      return updated.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0))
+    })
+  }, [])
+
+  const duplicateTab = useCallback((id: string) => {
+    const source = tabs.find(t => t.id === id)
+    if (!source) return
+    const tab = createTab(source.url)
+    tab.title = source.title
+    tab.favicon = source.favicon
+    setTabs(prev => [...prev, tab])
+    setActiveTabId(tab.id)
+  }, [tabs])
+
   return {
     tabs,
     activeTabId,
@@ -61,5 +83,7 @@ export function useTabs() {
     closeTab,
     switchTab,
     updateTab,
+    pinTab,
+    duplicateTab,
   }
 }

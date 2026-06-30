@@ -10,6 +10,7 @@ import FindBar from './components/FindBar'
 import AISidebar from './components/AISidebar'
 import HistoryPanel from './components/HistoryPanel'
 import BookmarksPanel from './components/BookmarksPanel'
+import NewTabPage from './components/NewTabPage'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
@@ -19,7 +20,7 @@ import { getVisualEditScript } from './visual-edit/inject'
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | null
 
 export default function App() {
-  const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab } = useTabs()
+  const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab, pinTab, duplicateTab } = useTabs()
   const { allRecipes, activeRecipes, createRecipe, toggleRecipe, deleteRecipe, refresh } = useRecipes(activeTab?.url || '')
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const urlBarRef = useRef<HTMLInputElement>(null)
@@ -42,19 +43,24 @@ export default function App() {
     setSidePanel(prev => prev === panel ? null : panel)
   }
 
-  function handleNavigate(input: string) {
-    const wv = getActiveWebview()
-    if (!wv) return
+  function resolveUrl(input: string): string {
+    if (/^https?:\/\//i.test(input) || input.startsWith('file://')) return input
+    if (input.startsWith('melt://')) return input
+    if (input.includes('.') && !input.includes(' ')) return 'https://' + input
+    return `https://www.google.com/search?q=${encodeURIComponent(input)}`
+  }
 
-    let url = input
-    if (!/^https?:\/\//i.test(input) && !input.startsWith('file://')) {
-      if (input.includes('.') && !input.includes(' ')) {
-        url = 'https://' + input
-      } else {
-        url = `https://www.google.com/search?q=${encodeURIComponent(input)}`
-      }
+  function handleNavigate(input: string) {
+    const url = resolveUrl(input)
+
+    // If currently on newtab, update the tab URL so it transitions to webview
+    if (activeTab?.url === 'melt://newtab') {
+      updateTab(activeTabId, { url, isLoading: true })
+      return
     }
 
+    const wv = getActiveWebview()
+    if (!wv) return
     wv.loadURL(url)
   }
 
@@ -383,6 +389,8 @@ export default function App() {
           onSwitch={switchTab}
           onClose={closeTab}
           onNew={() => newTab()}
+          onPin={pinTab}
+          onDuplicate={duplicateTab}
         />
         <FindBar
           visible={showFindBar}
@@ -409,17 +417,27 @@ export default function App() {
         <div className="content-area">
           <div className="webview-container">
             {tabs.map((tab) => (
-              <WebviewPanel
-                key={tab.id}
-                tab={tab}
-                isActive={tab.id === activeTabId}
-                onUpdate={updateTab}
-                recipesToInject={tab.id === activeTabId ? activeRecipes : []}
-                ref={(el) => {
-                  if (el) containerRefs.current.set(tab.id, el)
-                  else containerRefs.current.delete(tab.id)
-                }}
-              />
+              tab.url === 'melt://newtab' && tab.id === activeTabId ? (
+                <NewTabPage
+                  key={`ntp-${tab.id}`}
+                  onNavigate={(url) => {
+                    handleNavigate(url)
+                    updateTab(tab.id, { url })
+                  }}
+                />
+              ) : (
+                <WebviewPanel
+                  key={tab.id}
+                  tab={tab}
+                  isActive={tab.id === activeTabId}
+                  onUpdate={updateTab}
+                  recipesToInject={tab.id === activeTabId ? activeRecipes : []}
+                  ref={(el) => {
+                    if (el) containerRefs.current.set(tab.id, el)
+                    else containerRefs.current.delete(tab.id)
+                  }}
+                />
+              )
             ))}
           </div>
           {sidePanel === 'recipes' && (
