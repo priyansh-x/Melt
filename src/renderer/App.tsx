@@ -678,6 +678,21 @@ export default function App() {
           { id: 'css-inspect', label: 'CSS Inspector', category: 'Mode', action: toggleCssInspector },
           { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
           { id: 'outline', label: 'Page Outline', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getOutlineViewScript()) },
+          { id: 'scroll-top', label: 'Scroll to Top', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:0,behavior:"smooth"})') },
+          { id: 'scroll-bottom', label: 'Scroll to Bottom', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"})') },
+          { id: 'fullscreen', label: 'Toggle Fullscreen', category: 'View', action: () => {
+            if (document.fullscreenElement) document.exitFullscreen()
+            else document.documentElement.requestFullscreen()
+          }},
+          { id: 'translate', label: 'Translate Page', category: 'Tool', action: () => {
+            if (activeTab?.url) {
+              const translateUrl = 'https://translate.google.com/translate?sl=auto&tl=en&u=' + encodeURIComponent(activeTab.url)
+              newTab(translateUrl)
+            }
+          }},
+          { id: 'view-source', label: 'View Page Source', category: 'Dev', action: () => {
+            if (activeTab?.url) newTab('view-source:' + activeTab.url)
+          }},
           { id: 'dark-toggle', label: 'Toggle Dark Mode', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(`(function() {
             var s = document.getElementById('__melt-dark-toggle');
             if (s) { s.remove(); return; }
