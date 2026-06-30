@@ -1,16 +1,19 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { TabData } from '../../shared/ipc'
+import { Recipe } from '../../shared/recipe'
 
 interface Props {
   tab: TabData
   isActive: boolean
   onUpdate: (id: string, updates: Partial<TabData>) => void
+  recipesToInject: Recipe[]
 }
 
-const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdate }, ref) => {
+const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdate, recipesToInject }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
   const tabId = useRef(tab.id)
+  const injectedCssKeys = useRef<Map<string, string>>(new Map())
 
   useImperativeHandle(ref, () => containerRef.current!)
 
@@ -68,6 +71,42 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
       wv.removeEventListener('dom-ready', onDomReady)
     }
   }, [tab.url, onUpdate])
+
+  // Inject recipes when they change or page finishes loading
+  useEffect(() => {
+    if (!isActive) return
+
+    const container = containerRef.current
+    if (!container) return
+    const wv = container.querySelector('webview') as Electron.WebviewTag | null
+    if (!wv) return
+
+    const injectRecipes = async () => {
+      // Remove previously injected CSS
+      for (const [recipeId, cssKey] of injectedCssKeys.current) {
+        try { wv.removeInsertedCSS(cssKey) } catch {}
+      }
+      injectedCssKeys.current.clear()
+
+      for (const recipe of recipesToInject) {
+        if (recipe.css) {
+          try {
+            const key = await wv.insertCSS(recipe.css)
+            injectedCssKeys.current.set(recipe.id, key)
+          } catch {}
+        }
+        if (recipe.js) {
+          try {
+            await wv.executeJavaScript(recipe.js)
+          } catch {}
+        }
+      }
+    }
+
+    // Wait a tick for the webview to be ready
+    const timer = setTimeout(injectRecipes, 100)
+    return () => clearTimeout(timer)
+  }, [recipesToInject, isActive, tab.isLoading])
 
   return (
     <div

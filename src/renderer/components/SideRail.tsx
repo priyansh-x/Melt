@@ -1,4 +1,9 @@
-export default function SideRail() {
+interface Props {
+  onRecipesClick: () => void
+  recipeCount: number
+}
+
+export default function SideRail({ onRecipesClick, recipeCount }: Props) {
   return (
     <div className="side-rail">
       <div className="rail-top">
@@ -24,10 +29,13 @@ export default function SideRail() {
           </svg>
         </button>
 
-        <button className="rail-btn accent" aria-label="Recipes">
+        <button className="rail-btn accent" onClick={onRecipesClick} aria-label="Recipes" style={{ position: 'relative' }}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5" />
           </svg>
+          {recipeCount > 0 && (
+            <span className="rail-badge">{recipeCount}</span>
+          )}
         </button>
       </div>
 

@@ -1,15 +1,19 @@
-import { useCallback, useRef, useMemo } from 'react'
+import { useCallback, useRef, useMemo, useState } from 'react'
 import TitleBar from './components/TitleBar'
 import TabStrip from './components/TabStrip'
 import SideRail from './components/SideRail'
 import WebviewPanel from './components/WebviewPanel'
+import RecipePanel from './components/recipes/RecipePanel'
 import { useTabs } from './hooks/useTabs'
+import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
 
 export default function App() {
   const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab } = useTabs()
+  const { allRecipes, activeRecipes, createRecipe, toggleRecipe, deleteRecipe } = useRecipes(activeTab?.url || '')
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const urlBarRef = useRef<HTMLInputElement>(null)
+  const [showRecipePanel, setShowRecipePanel] = useState(false)
 
   const getActiveWebview = useCallback((): Electron.WebviewTag | null => {
     const container = containerRefs.current.get(activeTabId)
@@ -78,7 +82,10 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <SideRail />
+      <SideRail
+        onRecipesClick={() => setShowRecipePanel((v) => !v)}
+        recipeCount={activeRecipes.length}
+      />
       <div className="main-area">
         <TitleBar
           url={activeTab?.url || ''}
@@ -98,19 +105,33 @@ export default function App() {
           onClose={closeTab}
           onNew={() => newTab()}
         />
-        <div className="webview-container">
-          {tabs.map((tab) => (
-            <WebviewPanel
-              key={tab.id}
-              tab={tab}
-              isActive={tab.id === activeTabId}
-              onUpdate={updateTab}
-              ref={(el) => {
-                if (el) containerRefs.current.set(tab.id, el)
-                else containerRefs.current.delete(tab.id)
-              }}
+        <div className="content-area">
+          <div className="webview-container">
+            {tabs.map((tab) => (
+              <WebviewPanel
+                key={tab.id}
+                tab={tab}
+                isActive={tab.id === activeTabId}
+                onUpdate={updateTab}
+                recipesToInject={tab.id === activeTabId ? activeRecipes : []}
+                ref={(el) => {
+                  if (el) containerRefs.current.set(tab.id, el)
+                  else containerRefs.current.delete(tab.id)
+                }}
+              />
+            ))}
+          </div>
+          {showRecipePanel && (
+            <RecipePanel
+              allRecipes={allRecipes}
+              activeRecipes={activeRecipes}
+              currentUrl={activeTab?.url || ''}
+              onCreateRecipe={createRecipe}
+              onToggleRecipe={toggleRecipe}
+              onDeleteRecipe={deleteRecipe}
+              onClose={() => setShowRecipePanel(false)}
             />
-          ))}
+          )}
         </div>
       </div>
     </div>
