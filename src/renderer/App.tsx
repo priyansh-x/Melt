@@ -22,7 +22,7 @@ type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | null
 
 export default function App() {
   const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab, pinTab, duplicateTab } = useTabs()
-  const { allRecipes, activeRecipes, createRecipe, toggleRecipe, deleteRecipe, refresh } = useRecipes(activeTab?.url || '')
+  const { allRecipes, activeRecipes, createRecipe, updateRecipe, toggleRecipe, deleteRecipe, refresh } = useRecipes(activeTab?.url || '')
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const urlBarRef = useRef<HTMLInputElement>(null)
   const [sidePanel, setSidePanel] = useState<SidePanel>(null)
@@ -447,6 +447,7 @@ export default function App() {
               activeRecipes={activeRecipes}
               currentUrl={activeTab?.url || ''}
               onCreateRecipe={createRecipe}
+              onUpdateRecipe={updateRecipe}
               onToggleRecipe={toggleRecipe}
               onDeleteRecipe={deleteRecipe}
               onClose={() => setSidePanel(null)}

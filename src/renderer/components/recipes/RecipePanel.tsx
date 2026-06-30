@@ -9,6 +9,7 @@ interface Props {
   activeRecipes: Recipe[]
   currentUrl: string
   onCreateRecipe: (data: RecipeCreate) => void
+  onUpdateRecipe: (id: string, data: Partial<RecipeCreate>) => void
   onToggleRecipe: (id: string) => void
   onDeleteRecipe: (id: string) => void
   onClose: () => void
@@ -21,11 +22,13 @@ export default function RecipePanel({
   activeRecipes,
   currentUrl,
   onCreateRecipe,
+  onUpdateRecipe,
   onToggleRecipe,
   onDeleteRecipe,
   onClose,
 }: Props) {
   const [tab, setTab] = useState<Tab>('list')
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | undefined>()
   const [statusMsg, setStatusMsg] = useState<string | null>(null)
 
   const installedNames = useMemo(() => new Set(allRecipes.map(r => r.name)), [allRecipes])
@@ -64,9 +67,8 @@ export default function RecipePanel({
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="recipe-tabs" style={{ margin: '8px 12px 0' }}>
-        <button className={`recipe-tab ${tab === 'list' ? 'active' : ''}`} onClick={() => setTab('list')}>
+        <button className={`recipe-tab ${tab === 'list' ? 'active' : ''}`} onClick={() => { setTab('list'); setEditingRecipe(undefined) }}>
           My Recipes
         </button>
         <button className={`recipe-tab ${tab === 'templates' ? 'active' : ''}`} onClick={() => setTab('templates')}>
@@ -84,11 +86,18 @@ export default function RecipePanel({
         {tab === 'editor' ? (
           <RecipeEditor
             currentUrl={currentUrl}
+            existingRecipe={editingRecipe}
             onSave={(data) => {
               onCreateRecipe(data)
               setTab('list')
+              setEditingRecipe(undefined)
             }}
-            onCancel={() => setTab('list')}
+            onUpdate={(id, data) => {
+              onUpdateRecipe(id, data)
+              setTab('list')
+              setEditingRecipe(undefined)
+            }}
+            onCancel={() => { setTab('list'); setEditingRecipe(undefined) }}
           />
         ) : tab === 'templates' ? (
           <RecipeTemplates
@@ -105,7 +114,8 @@ export default function RecipePanel({
             activeRecipes={activeRecipes}
             onToggle={onToggleRecipe}
             onDelete={onDeleteRecipe}
-            onNew={() => setTab('editor')}
+            onEdit={(recipe) => { setEditingRecipe(recipe); setTab('editor') }}
+            onNew={() => { setEditingRecipe(undefined); setTab('editor') }}
           />
         )}
       </div>

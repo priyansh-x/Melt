@@ -1,42 +1,50 @@
 import { useState } from 'react'
-import { RecipeCreate } from '../../../shared/recipe'
+import { Recipe, RecipeCreate } from '../../../shared/recipe'
 
 interface Props {
   currentUrl: string
+  existingRecipe?: Recipe
   onSave: (data: RecipeCreate) => void
+  onUpdate?: (id: string, data: Partial<RecipeCreate>) => void
   onCancel: () => void
 }
 
-export default function RecipeEditor({ currentUrl, onSave, onCancel }: Props) {
-  const [name, setName] = useState('')
-  const [urlPattern, setUrlPattern] = useState(() => {
-    try {
-      const u = new URL(currentUrl)
-      return u.hostname + '/*'
-    } catch {
-      return '*'
-    }
-  })
-  const [css, setCss] = useState('')
-  const [js, setJs] = useState('')
+export default function RecipeEditor({ currentUrl, existingRecipe, onSave, onUpdate, onCancel }: Props) {
+  const isEditing = !!existingRecipe
+  const [name, setName] = useState(existingRecipe?.name || '')
+  const [urlPattern, setUrlPattern] = useState(existingRecipe?.urlPattern || (() => {
+    try { return new URL(currentUrl).hostname + '/*' } catch { return '*' }
+  }))
+  const [css, setCss] = useState(existingRecipe?.css || '')
+  const [js, setJs] = useState(existingRecipe?.js || '')
   const [activeTab, setActiveTab] = useState<'css' | 'js'>('css')
 
   function handleSave() {
     if (!name.trim()) return
-    onSave({
-      name: name.trim(),
-      urlPattern,
-      css,
-      js,
-      domActions: '[]',
-      enabled: true,
-    })
+    if (isEditing && onUpdate && existingRecipe) {
+      onUpdate(existingRecipe.id, {
+        name: name.trim(),
+        urlPattern,
+        css,
+        js,
+        domActions: existingRecipe.domActions || '[]',
+      })
+    } else {
+      onSave({
+        name: name.trim(),
+        urlPattern,
+        css,
+        js,
+        domActions: '[]',
+        enabled: true,
+      })
+    }
   }
 
   return (
     <div className="recipe-editor">
       <div className="recipe-editor-header">
-        <h3>New recipe</h3>
+        <h3>{isEditing ? 'Edit recipe' : 'New recipe'}</h3>
         <button className="recipe-editor-close" onClick={onCancel}>×</button>
       </div>
 
@@ -96,7 +104,7 @@ export default function RecipeEditor({ currentUrl, onSave, onCancel }: Props) {
       <div className="recipe-actions">
         <button className="recipe-btn secondary" onClick={onCancel}>Cancel</button>
         <button className="recipe-btn primary" onClick={handleSave} disabled={!name.trim()}>
-          Save recipe
+          {isEditing ? 'Update recipe' : 'Save recipe'}
         </button>
       </div>
     </div>
