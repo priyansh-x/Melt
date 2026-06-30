@@ -25,6 +25,7 @@ import { getReaderModeScript } from './visual-edit/reader-mode'
 import { getCopyAsMarkdownScript } from './visual-edit/copy-markdown'
 import { getCssInspectorScript } from './visual-edit/css-inspector'
 import { getPageStatsScript } from './visual-edit/page-stats'
+import { getOutlineViewScript } from './visual-edit/outline-view'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
@@ -676,6 +677,15 @@ export default function App() {
           { id: 'reader', label: 'Reader Mode', category: 'Mode', action: toggleReaderMode },
           { id: 'css-inspect', label: 'CSS Inspector', category: 'Mode', action: toggleCssInspector },
           { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
+          { id: 'outline', label: 'Page Outline', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getOutlineViewScript()) },
+          { id: 'dark-toggle', label: 'Toggle Dark Mode', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(`(function() {
+            var s = document.getElementById('__melt-dark-toggle');
+            if (s) { s.remove(); return; }
+            s = document.createElement('style');
+            s.id = '__melt-dark-toggle';
+            s.textContent = 'html { filter: invert(1) hue-rotate(180deg) !important; } img, video, canvas, svg, [style*="background-image"] { filter: invert(1) hue-rotate(180deg) !important; }';
+            document.head.appendChild(s);
+          })()`) },
           { id: 'screenshot', label: 'Take Screenshot', category: 'Tool', action: takeScreenshot },
           { id: 'copy-md', label: 'Copy Page as Markdown', category: 'Tool', action: copyAsMarkdown },
           { id: 'pip', label: 'Picture-in-Picture', category: 'Tool', action: togglePictureInPicture },
