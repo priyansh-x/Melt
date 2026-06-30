@@ -36,6 +36,8 @@ import { getViewportResizerScript } from './visual-edit/viewport-resizer'
 import { getA11yCheckerScript } from './visual-edit/a11y-checker'
 import { getPerfMonitorScript } from './visual-edit/perf-monitor'
 import { getDomTreeScript } from './visual-edit/dom-tree'
+import { getFontInspectorScript } from './visual-edit/font-inspector'
+import { getSpacingVizScript } from './visual-edit/spacing-viz'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
@@ -702,6 +704,8 @@ export default function App() {
           { id: 'a11y-checker', label: 'Accessibility Checker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getA11yCheckerScript()) },
           { id: 'perf-monitor', label: 'Performance Monitor', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPerfMonitorScript()) },
           { id: 'dom-tree', label: 'DOM Tree Explorer', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getDomTreeScript()) },
+          { id: 'font-inspector', label: 'Font Inspector', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getFontInspectorScript()) },
+          { id: 'spacing-viz', label: 'Spacing Visualizer', category: 'Mode', action: () => getActiveWebview()?.executeJavaScript(getSpacingVizScript()) },
           { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
           { id: 'outline', label: 'Page Outline', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getOutlineViewScript()) },
           { id: 'color-picker', label: 'Color Picker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getColorPickerScript()) },
