@@ -170,4 +170,54 @@ img { max-width: 100% !important; height: auto !important; }`,
       enabled: true,
     },
   },
+  {
+    id: 'ad-blocker',
+    name: 'Basic Ad Blocker',
+    description: 'Hide common ad containers and overlays',
+    category: 'privacy',
+    recipe: {
+      name: 'Basic Ad Blocker',
+      urlPattern: '*',
+      css: `[class*="ad-"], [class*="ad_"], [class*="advert"],
+[id*="ad-"], [id*="ad_"], [id*="advert"],
+[class*="sponsor"], [id*="sponsor"],
+[class*="banner-ad"], [id*="banner-ad"],
+iframe[src*="doubleclick"], iframe[src*="googlesyndication"],
+iframe[src*="adserver"], iframe[src*="ad."],
+[data-ad], [data-ad-slot], [data-google-query-id],
+.adsbygoogle, .ad-container, .ad-wrapper, .ad-banner,
+#google_ads_frame, .google-auto-placed {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}`,
+      js: '',
+      domActions: '[]',
+      enabled: true,
+    },
+  },
+  {
+    id: 'focus-mode',
+    name: 'Focus Mode',
+    description: 'Dim distracting elements, highlight main content',
+    category: 'productivity',
+    recipe: {
+      name: 'Focus Mode',
+      urlPattern: '*',
+      css: `aside, [role="complementary"], [class*="sidebar"],
+[class*="related"], [class*="recommend"], [class*="popular"],
+[class*="trending"], footer, [class*="comment"] {
+  opacity: 0.15 !important;
+  transition: opacity 0.3s !important;
+}
+aside:hover, [role="complementary"]:hover, [class*="sidebar"]:hover,
+footer:hover, [class*="comment"]:hover {
+  opacity: 1 !important;
+}`,
+      js: '',
+      domActions: '[]',
+      enabled: true,
+    },
+  },
 ]

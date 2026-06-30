@@ -21,6 +21,7 @@ import { useShortcuts } from './hooks/useShortcuts'
 import { GenerateRecipeRequest } from '../shared/ai'
 import { getVisualEditScript } from './visual-edit/inject'
 import { getReaderModeScript } from './visual-edit/reader-mode'
+import { getCopyAsMarkdownScript } from './visual-edit/copy-markdown'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | null
 
@@ -325,6 +326,11 @@ export default function App() {
     } catch {}
   }
 
+  async function copyAsMarkdown() {
+    const wv = getActiveWebview()
+    if (wv) await wv.executeJavaScript(getCopyAsMarkdownScript())
+  }
+
   // ─── Revert All ───
   async function handleRevertAll() {
     for (const r of activeRecipes) {
@@ -615,6 +621,7 @@ export default function App() {
           { id: 'xray', label: 'Toggle X-ray', category: 'Mode', action: toggleXray },
           { id: 'reader', label: 'Reader Mode', category: 'Mode', action: toggleReaderMode },
           { id: 'screenshot', label: 'Take Screenshot', category: 'Tool', action: takeScreenshot },
+          { id: 'copy-md', label: 'Copy Page as Markdown', category: 'Tool', action: copyAsMarkdown },
           { id: 'find', label: 'Find in Page', shortcut: '⌘F', category: 'Tool', action: () => setShowFindBar(true) },
           { id: 'shortcuts', label: 'Keyboard Shortcuts', shortcut: '⌘/', category: 'Help', action: () => setShowShortcuts(true) },
           { id: 'devtools', label: 'Toggle DevTools', shortcut: '⌘⌥I', category: 'Dev', action: () => {
