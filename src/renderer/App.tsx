@@ -31,6 +31,11 @@ import { getHighlighterScript } from './visual-edit/highlighter'
 import { getGridOverlayScript } from './visual-edit/grid-overlay'
 import { getRulerScript } from './visual-edit/ruler'
 import { getLinkPreviewScript } from './visual-edit/link-preview'
+import { getLiveCssScript } from './visual-edit/live-css'
+import { getViewportResizerScript } from './visual-edit/viewport-resizer'
+import { getA11yCheckerScript } from './visual-edit/a11y-checker'
+import { getPerfMonitorScript } from './visual-edit/perf-monitor'
+import { getDomTreeScript } from './visual-edit/dom-tree'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
@@ -692,6 +697,11 @@ export default function App() {
           { id: 'grid', label: 'Grid Overlay', category: 'Mode', action: () => getActiveWebview()?.executeJavaScript(getGridOverlayScript()) },
           { id: 'ruler', label: 'Ruler / Measure', category: 'Mode', action: () => getActiveWebview()?.executeJavaScript(getRulerScript()) },
           { id: 'link-preview', label: 'Link Previewer', category: 'Mode', action: () => getActiveWebview()?.executeJavaScript(getLinkPreviewScript()) },
+          { id: 'live-css', label: 'Live CSS Editor', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getLiveCssScript()) },
+          { id: 'viewport-resizer', label: 'Responsive Viewport', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getViewportResizerScript()) },
+          { id: 'a11y-checker', label: 'Accessibility Checker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getA11yCheckerScript()) },
+          { id: 'perf-monitor', label: 'Performance Monitor', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPerfMonitorScript()) },
+          { id: 'dom-tree', label: 'DOM Tree Explorer', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getDomTreeScript()) },
           { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
           { id: 'outline', label: 'Page Outline', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getOutlineViewScript()) },
           { id: 'color-picker', label: 'Color Picker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getColorPickerScript()) },
