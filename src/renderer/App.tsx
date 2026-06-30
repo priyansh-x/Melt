@@ -733,6 +733,60 @@ export default function App() {
               tabData.forEach((t: { url: string }) => newTab(t.url))
             }
           }},
+          { id: 'ua-mobile', label: 'Emulate Mobile UA', category: 'Dev', action: () => {
+            const wv = getActiveWebview()
+            if (wv) {
+              wv.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1')
+              wv.reload()
+            }
+          }},
+          { id: 'ua-desktop', label: 'Reset to Desktop UA', category: 'Dev', action: () => {
+            const wv = getActiveWebview()
+            if (wv) {
+              wv.setUserAgent('')
+              wv.reload()
+            }
+          }},
+          { id: 'cookies', label: 'View Cookies', category: 'Dev', action: () => {
+            getActiveWebview()?.executeJavaScript(`(function() {
+              var existing = document.getElementById('__melt-cookies');
+              if (existing) { existing.remove(); return; }
+              var cookies = document.cookie.split(';').map(function(c) { return c.trim(); }).filter(Boolean);
+              var panel = document.createElement('div');
+              panel.id = '__melt-cookies';
+              panel.style.cssText = 'position:fixed;top:12px;right:12px;z-index:2147483645;width:320px;max-height:400px;background:#1a1a1a;border:1px solid #333;border-radius:8px;font:11px/1.5 -apple-system,monospace;color:#ccc;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden;display:flex;flex-direction:column;';
+              panel.innerHTML = '<div style="padding:8px 12px;background:#222;border-bottom:1px solid #333;display:flex;justify-content:space-between;"><span style="color:#f59e0b;font-weight:500;">Cookies (' + cookies.length + ')</span><button onclick="this.closest(\\'#__melt-cookies\\').remove()" style="background:none;border:none;color:#666;cursor:pointer;font-size:14px;">×</button></div>';
+              var list = document.createElement('div');
+              list.style.cssText = 'overflow-y:auto;flex:1;padding:6px 12px;';
+              if (!cookies.length) list.innerHTML = '<div style="color:#666;">No cookies</div>';
+              cookies.forEach(function(c) {
+                var parts = c.split('=');
+                list.innerHTML += '<div style="padding:3px 0;border-bottom:1px solid #222;word-break:break-all;"><span style="color:#f59e0b;">' + parts[0] + '</span> = <span style="color:#e0e0e0;">' + (parts.slice(1).join('=') || '') + '</span></div>';
+              });
+              panel.appendChild(list);
+              document.body.appendChild(panel);
+            })()`)
+          }},
+          { id: 'local-storage', label: 'View Local Storage', category: 'Dev', action: () => {
+            getActiveWebview()?.executeJavaScript(`(function() {
+              var existing = document.getElementById('__melt-storage');
+              if (existing) { existing.remove(); return; }
+              var keys = Object.keys(localStorage);
+              var panel = document.createElement('div');
+              panel.id = '__melt-storage';
+              panel.style.cssText = 'position:fixed;top:12px;right:12px;z-index:2147483645;width:320px;max-height:400px;background:#1a1a1a;border:1px solid #333;border-radius:8px;font:11px/1.5 -apple-system,monospace;color:#ccc;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden;display:flex;flex-direction:column;';
+              panel.innerHTML = '<div style="padding:8px 12px;background:#222;border-bottom:1px solid #333;display:flex;justify-content:space-between;"><span style="color:#3b82f6;font-weight:500;">Local Storage (' + keys.length + ')</span><button onclick="this.closest(\\'#__melt-storage\\').remove()" style="background:none;border:none;color:#666;cursor:pointer;font-size:14px;">×</button></div>';
+              var list = document.createElement('div');
+              list.style.cssText = 'overflow-y:auto;flex:1;padding:6px 12px;';
+              if (!keys.length) list.innerHTML = '<div style="color:#666;">No items</div>';
+              keys.slice(0, 50).forEach(function(k) {
+                var val = localStorage.getItem(k) || '';
+                list.innerHTML += '<div style="padding:3px 0;border-bottom:1px solid #222;"><div style="color:#3b82f6;word-break:break-all;">' + k + '</div><div style="color:#888;max-height:40px;overflow:hidden;text-overflow:ellipsis;">' + val.substring(0, 100) + '</div></div>';
+              });
+              panel.appendChild(list);
+              document.body.appendChild(panel);
+            })()`)
+          }},
           { id: 'view-source', label: 'View Page Source', category: 'Dev', action: () => {
             if (activeTab?.url) newTab('view-source:' + activeTab.url)
           }},
