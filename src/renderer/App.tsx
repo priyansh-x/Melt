@@ -38,6 +38,8 @@ import { getPerfMonitorScript } from './visual-edit/perf-monitor'
 import { getDomTreeScript } from './visual-edit/dom-tree'
 import { getFontInspectorScript } from './visual-edit/font-inspector'
 import { getSpacingVizScript } from './visual-edit/spacing-viz'
+import { getMetaViewerScript } from './visual-edit/meta-viewer'
+import { getZIndexVizScript } from './visual-edit/zindex-viz'
 
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
@@ -706,6 +708,8 @@ export default function App() {
           { id: 'dom-tree', label: 'DOM Tree Explorer', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getDomTreeScript()) },
           { id: 'font-inspector', label: 'Font Inspector', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getFontInspectorScript()) },
           { id: 'spacing-viz', label: 'Spacing Visualizer', category: 'Mode', action: () => getActiveWebview()?.executeJavaScript(getSpacingVizScript()) },
+          { id: 'meta-viewer', label: 'Meta & SEO Viewer', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getMetaViewerScript()) },
+          { id: 'zindex-viz', label: 'Z-Index Map', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getZIndexVizScript()) },
           { id: 'page-stats', label: 'Page Stats', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getPageStatsScript()) },
           { id: 'outline', label: 'Page Outline', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getOutlineViewScript()) },
           { id: 'color-picker', label: 'Color Picker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getColorPickerScript()) },
