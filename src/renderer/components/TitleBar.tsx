@@ -1,4 +1,4 @@
-import { useState, useRef, KeyboardEvent } from 'react'
+import { useState, useRef, KeyboardEvent, RefObject } from 'react'
 
 interface Props {
   url: string
@@ -9,6 +9,7 @@ interface Props {
   onBack: () => void
   onForward: () => void
   onReload: () => void
+  urlBarRef?: RefObject<HTMLInputElement | null>
 }
 
 export default function TitleBar({
@@ -20,10 +21,12 @@ export default function TitleBar({
   onBack,
   onForward,
   onReload,
+  urlBarRef,
 }: Props) {
   const [inputValue, setInputValue] = useState('')
   const [isFocused, setIsFocused] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const fallbackRef = useRef<HTMLInputElement>(null)
+  const inputRef = urlBarRef || fallbackRef
 
   const displayValue = isFocused ? inputValue : url
 

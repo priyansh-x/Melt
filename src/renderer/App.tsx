@@ -1,13 +1,15 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useMemo } from 'react'
 import TitleBar from './components/TitleBar'
 import TabStrip from './components/TabStrip'
 import SideRail from './components/SideRail'
 import WebviewPanel from './components/WebviewPanel'
 import { useTabs } from './hooks/useTabs'
+import { useShortcuts } from './hooks/useShortcuts'
 
 export default function App() {
   const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab } = useTabs()
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const urlBarRef = useRef<HTMLInputElement>(null)
 
   const getActiveWebview = useCallback((): Electron.WebviewTag | null => {
     const container = containerRefs.current.get(activeTabId)
@@ -44,6 +46,36 @@ export default function App() {
     getActiveWebview()?.reload()
   }
 
+  const shortcuts = useMemo(() => ({
+    newTab: () => newTab(),
+    closeTab: () => { if (activeTabId) closeTab(activeTabId) },
+    reload: handleReload,
+    goBack: handleBack,
+    goForward: handleForward,
+    focusUrl: () => urlBarRef.current?.focus(),
+    nextTab: () => {
+      const idx = tabs.findIndex((t) => t.id === activeTabId)
+      if (idx < tabs.length - 1) switchTab(tabs[idx + 1].id)
+    },
+    prevTab: () => {
+      const idx = tabs.findIndex((t) => t.id === activeTabId)
+      if (idx > 0) switchTab(tabs[idx - 1].id)
+    },
+    zoomIn: () => {
+      const wv = getActiveWebview()
+      if (wv) wv.setZoomLevel(wv.getZoomLevel() + 0.5)
+    },
+    zoomOut: () => {
+      const wv = getActiveWebview()
+      if (wv) wv.setZoomLevel(wv.getZoomLevel() - 0.5)
+    },
+    zoomReset: () => {
+      getActiveWebview()?.setZoomLevel(0)
+    },
+  }), [tabs, activeTabId, newTab, closeTab, switchTab, getActiveWebview])
+
+  useShortcuts(shortcuts)
+
   return (
     <div className="app-shell">
       <SideRail />
@@ -57,6 +89,7 @@ export default function App() {
           onBack={handleBack}
           onForward={handleForward}
           onReload={handleReload}
+          urlBarRef={urlBarRef}
         />
         <TabStrip
           tabs={tabs}
