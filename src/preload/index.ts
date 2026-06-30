@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { RECIPE_IPC, Recipe, RecipeCreate, RecipeUpdate } from '../shared/recipe'
 import { AI_IPC, GenerateRecipeRequest, GenerateRecipeResponse, ChatRequest, ChatResponse } from '../shared/ai'
 import { HISTORY_IPC, BOOKMARK_IPC, HistoryEntry, Bookmark } from '../shared/history'
+import { DOWNLOAD_IPC, DownloadItem } from '../shared/downloads'
 
 const api = {
   onShortcut: (channel: string, cb: () => void) => {
@@ -58,6 +59,21 @@ const api = {
       ipcRenderer.invoke(BOOKMARK_IPC.REMOVE, url),
     isBookmarked: (url: string): Promise<boolean> =>
       ipcRenderer.invoke(BOOKMARK_IPC.IS_BOOKMARKED, url),
+  },
+
+  downloads: {
+    getAll: (): Promise<DownloadItem[]> =>
+      ipcRenderer.invoke(DOWNLOAD_IPC.GET_ALL),
+    open: (savePath: string) =>
+      ipcRenderer.invoke(DOWNLOAD_IPC.OPEN, savePath),
+    showInFolder: (savePath: string) =>
+      ipcRenderer.invoke(DOWNLOAD_IPC.SHOW_IN_FOLDER, savePath),
+    onStarted: (cb: (dl: DownloadItem) => void) =>
+      ipcRenderer.on(DOWNLOAD_IPC.ON_STARTED, (_e, dl) => cb(dl)),
+    onProgress: (cb: (dl: DownloadItem) => void) =>
+      ipcRenderer.on(DOWNLOAD_IPC.ON_PROGRESS, (_e, dl) => cb(dl)),
+    onDone: (cb: (dl: DownloadItem) => void) =>
+      ipcRenderer.on(DOWNLOAD_IPC.ON_DONE, (_e, dl) => cb(dl)),
   },
 }
 

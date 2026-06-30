@@ -4,6 +4,7 @@ import { APP_NAME } from '../shared/constants'
 import { registerRecipeHandlers } from './recipes/ipc-handlers'
 import { registerAIHandlers } from './ai/ipc-handlers'
 import { registerBrowserHandlers } from './browser/ipc-handlers'
+import { registerDownloadHandlers } from './browser/downloads'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -170,6 +171,7 @@ app.whenReady().then(() => {
   registerRecipeHandlers()
   registerAIHandlers()
   registerBrowserHandlers()
+  registerDownloadHandlers()
   buildMenu()
   createWindow()
 })

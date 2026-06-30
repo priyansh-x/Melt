@@ -11,6 +11,7 @@ import AISidebar from './components/AISidebar'
 import HistoryPanel from './components/HistoryPanel'
 import BookmarksPanel from './components/BookmarksPanel'
 import NewTabPage from './components/NewTabPage'
+import DownloadBar from './components/DownloadBar'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
@@ -476,6 +477,7 @@ export default function App() {
             />
           )}
         </div>
+        <DownloadBar />
         <PromptBar
           onSubmit={handleAiPrompt}
           isLoading={aiLoading}
