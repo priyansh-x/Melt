@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import path from 'path'
 import { APP_NAME } from '../shared/constants'
 import { registerRecipeHandlers } from './recipes/ipc-handlers'
+import { registerAIHandlers } from './ai/ipc-handlers'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -160,6 +161,7 @@ function buildMenu() {
 
 app.whenReady().then(() => {
   registerRecipeHandlers()
+  registerAIHandlers()
   buildMenu()
   createWindow()
 })

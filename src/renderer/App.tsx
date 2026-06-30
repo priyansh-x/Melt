@@ -4,9 +4,12 @@ import TabStrip from './components/TabStrip'
 import SideRail from './components/SideRail'
 import WebviewPanel from './components/WebviewPanel'
 import RecipePanel from './components/recipes/RecipePanel'
+import PromptBar from './components/PromptBar'
+import SettingsPanel from './components/SettingsPanel'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
+import { GenerateRecipeRequest } from '../shared/ai'
 
 export default function App() {
   const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab } = useTabs()
@@ -14,6 +17,10 @@ export default function App() {
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const urlBarRef = useRef<HTMLInputElement>(null)
   const [showRecipePanel, setShowRecipePanel] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiResult, setAiResult] = useState<string | null>(null)
 
   const getActiveWebview = useCallback((): Electron.WebviewTag | null => {
     const container = containerRefs.current.get(activeTabId)
@@ -80,10 +87,55 @@ export default function App() {
 
   useShortcuts(shortcuts)
 
+  async function handleAiPrompt(prompt: string) {
+    const wv = getActiveWebview()
+    if (!wv) return
+
+    setAiError(null)
+    setAiResult(null)
+    setAiLoading(true)
+
+    try {
+      let pageHtml = ''
+      try {
+        pageHtml = await wv.executeJavaScript('document.documentElement.outerHTML')
+      } catch {}
+
+      const req: GenerateRecipeRequest = {
+        prompt,
+        url: activeTab?.url || '',
+        pageTitle: activeTab?.title || '',
+        pageHtml,
+      }
+
+      const res = await (window as any).melt.ai.generateRecipe(req)
+
+      if (!res.success) {
+        setAiError(res.error || 'Failed to generate recipe')
+        return
+      }
+
+      await createRecipe({
+        name: res.recipe.name,
+        urlPattern: res.recipe.urlPattern,
+        css: res.recipe.css,
+        js: res.recipe.js,
+      })
+
+      setAiResult(`Created recipe: "${res.recipe.name}"`)
+      setTimeout(() => setAiResult(null), 4000)
+    } catch (e: any) {
+      setAiError(e.message || 'Something went wrong')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   return (
     <div className="app-shell">
       <SideRail
-        onRecipesClick={() => setShowRecipePanel((v) => !v)}
+        onRecipesClick={() => { setShowRecipePanel((v) => !v); setShowSettings(false) }}
+        onSettingsClick={() => { setShowSettings((v) => !v); setShowRecipePanel(false) }}
         recipeCount={activeRecipes.length}
       />
       <div className="main-area">
@@ -132,7 +184,16 @@ export default function App() {
               onClose={() => setShowRecipePanel(false)}
             />
           )}
+          {showSettings && (
+            <SettingsPanel onClose={() => setShowSettings(false)} />
+          )}
         </div>
+        <PromptBar
+          onSubmit={handleAiPrompt}
+          isLoading={aiLoading}
+          error={aiError}
+          lastResult={aiResult}
+        />
       </div>
     </div>
   )

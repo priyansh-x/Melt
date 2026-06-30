@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { RECIPE_IPC, Recipe, RecipeCreate, RecipeUpdate } from '../shared/recipe'
+import { AI_IPC, GenerateRecipeRequest, GenerateRecipeResponse } from '../shared/ai'
 
 const api = {
   onShortcut: (channel: string, cb: () => void) => {
@@ -19,6 +20,15 @@ const api = {
       ipcRenderer.invoke(RECIPE_IPC.DELETE, id),
     toggle: (id: string): Promise<Recipe | null> =>
       ipcRenderer.invoke(RECIPE_IPC.TOGGLE, id),
+  },
+
+  ai: {
+    generateRecipe: (req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> =>
+      ipcRenderer.invoke(AI_IPC.GENERATE_RECIPE, req),
+    setApiKey: (key: string): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke(AI_IPC.SET_API_KEY, key),
+    getApiKey: (): Promise<string> =>
+      ipcRenderer.invoke(AI_IPC.GET_API_KEY),
   },
 }
 
