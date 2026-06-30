@@ -40,6 +40,7 @@ export default function App() {
   const [zoomLevel, setZoomLevel] = useState(0)
   const [mutedTabs, setMutedTabs] = useState<Set<string>>(new Set())
   const [showCommandPalette, setShowCommandPalette] = useState(false)
+  const [splitTabId, setSplitTabId] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiResult, setAiResult] = useState<string | null>(null)
@@ -520,31 +521,53 @@ export default function App() {
           </div>
         )}
         <div className="content-area">
-          <div className="webview-container">
-            {tabs.map((tab) => (
-              tab.url === 'melt://newtab' && tab.id === activeTabId ? (
-                <NewTabPage
-                  key={`ntp-${tab.id}`}
-                  onNavigate={(url) => {
-                    handleNavigate(url)
-                    updateTab(tab.id, { url })
-                  }}
-                />
-              ) : (
-                <WebviewPanel
-                  key={tab.id}
-                  tab={tab}
-                  isActive={tab.id === activeTabId}
-                  onUpdate={updateTab}
-                  recipesToInject={tab.id === activeTabId ? activeRecipes : []}
-                  onNewTab={(url) => newTab(url)}
-                  ref={(el) => {
-                    if (el) containerRefs.current.set(tab.id, el)
-                    else containerRefs.current.delete(tab.id)
-                  }}
-                />
+          <div className={`webview-container ${splitTabId ? 'split-view' : ''}`}>
+            <div className={`webview-pane ${splitTabId ? 'split-left' : ''}`}>
+              {tabs.map((tab) => (
+                tab.url === 'melt://newtab' && tab.id === activeTabId ? (
+                  <NewTabPage
+                    key={`ntp-${tab.id}`}
+                    onNavigate={(url) => {
+                      handleNavigate(url)
+                      updateTab(tab.id, { url })
+                    }}
+                  />
+                ) : (
+                  <WebviewPanel
+                    key={tab.id}
+                    tab={tab}
+                    isActive={tab.id === activeTabId}
+                    onUpdate={updateTab}
+                    recipesToInject={tab.id === activeTabId ? activeRecipes : []}
+                    onNewTab={(url) => newTab(url)}
+                    ref={(el) => {
+                      if (el) containerRefs.current.set(tab.id, el)
+                      else containerRefs.current.delete(tab.id)
+                    }}
+                  />
+                )
+              ))}
+            </div>
+            {splitTabId && (() => {
+              const splitTab = tabs.find(t => t.id === splitTabId)
+              if (!splitTab) return null
+              return (
+                <div className="webview-pane split-right">
+                  <div className="split-header">
+                    <span className="split-title">{splitTab.title || 'Split View'}</span>
+                    <button className="split-close" onClick={() => setSplitTabId(null)}>×</button>
+                  </div>
+                  <WebviewPanel
+                    key={`split-${splitTab.id}`}
+                    tab={splitTab}
+                    isActive={true}
+                    onUpdate={updateTab}
+                    recipesToInject={[]}
+                    onNewTab={(url) => newTab(url)}
+                  />
+                </div>
               )
-            ))}
+            })()}
           </div>
           {sidePanel === 'recipes' && (
             <RecipePanel
@@ -629,6 +652,13 @@ export default function App() {
             if (wv) wv.isDevToolsOpened() ? wv.closeDevTools() : wv.openDevTools()
           }},
           { id: 'revert', label: 'Revert All Recipes', category: 'Recipe', action: handleRevertAll },
+          { id: 'split', label: splitTabId ? 'Close Split View' : 'Split View', category: 'View', action: () => {
+            if (splitTabId) { setSplitTabId(null) }
+            else {
+              const newId = duplicateTab(activeTabId)
+              if (newId) setSplitTabId(newId)
+            }
+          }},
           { id: 'zoom-in', label: 'Zoom In', shortcut: '⌘+', category: 'View', action: () => {
             const wv = getActiveWebview()
             if (wv) { const n = zoomLevel + 1; setZoomLevel(n); wv.setZoomLevel(n) }

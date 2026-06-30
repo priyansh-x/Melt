@@ -390,6 +390,55 @@ body {
   height: 100%;
 }
 
+/* Split view */
+.webview-container.split-view {
+  display: flex;
+  flex-direction: row;
+}
+
+.webview-pane {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.split-left {
+  border-right: 1px solid var(--border);
+}
+
+.split-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.split-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.split-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.split-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.split-close:hover { color: var(--text-primary); }
+
 /* Rail badge */
 .rail-badge {
   position: absolute;

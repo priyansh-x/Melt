@@ -65,14 +65,15 @@ export function useTabs() {
     })
   }, [])
 
-  const duplicateTab = useCallback((id: string) => {
+  const duplicateTab = useCallback((id: string): string | undefined => {
     const source = tabs.find(t => t.id === id)
-    if (!source) return
+    if (!source) return undefined
     const tab = createTab(source.url)
     tab.title = source.title
     tab.favicon = source.favicon
     setTabs(prev => [...prev, tab])
     setActiveTabId(tab.id)
+    return tab.id
   }, [tabs])
 
   return {
