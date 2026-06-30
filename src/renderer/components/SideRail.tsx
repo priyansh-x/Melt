@@ -3,11 +3,13 @@ interface Props {
   onSettingsClick: () => void
   onAiClick: () => void
   onXrayClick: () => void
+  onHistoryClick: () => void
+  onBookmarksClick: () => void
   recipeCount: number
   xrayActive: boolean
 }
 
-export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, onXrayClick, recipeCount, xrayActive }: Props) {
+export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, onXrayClick, onHistoryClick, onBookmarksClick, recipeCount, xrayActive }: Props) {
   return (
     <div className="side-rail">
       <div className="rail-top">
@@ -20,13 +22,13 @@ export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, o
 
         <div className="rail-divider" />
 
-        <button className="rail-btn" aria-label="Bookmarks">
+        <button className="rail-btn" onClick={onBookmarksClick} aria-label="Bookmarks">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" />
           </svg>
         </button>
 
-        <button className="rail-btn" aria-label="History">
+        <button className="rail-btn" onClick={onHistoryClick} aria-label="History">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 6v6l4 2" />

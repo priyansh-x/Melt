@@ -30,4 +30,6 @@ export const RECIPE_IPC = {
   DELETE: 'recipe:delete',
   TOGGLE: 'recipe:toggle',
   INJECT: 'recipe:inject',
+  EXPORT: 'recipe:export',
+  IMPORT: 'recipe:import',
 } as const

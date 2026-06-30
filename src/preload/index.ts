@@ -21,6 +21,10 @@ const api = {
       ipcRenderer.invoke(RECIPE_IPC.DELETE, id),
     toggle: (id: string): Promise<Recipe | null> =>
       ipcRenderer.invoke(RECIPE_IPC.TOGGLE, id),
+    export: (): Promise<{ success: boolean; count?: number }> =>
+      ipcRenderer.invoke(RECIPE_IPC.EXPORT),
+    import: (): Promise<{ success: boolean; count?: number; error?: string }> =>
+      ipcRenderer.invoke(RECIPE_IPC.IMPORT),
   },
 
   ai: {

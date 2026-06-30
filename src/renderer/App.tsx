@@ -8,13 +8,15 @@ import PromptBar from './components/PromptBar'
 import SettingsPanel from './components/SettingsPanel'
 import FindBar from './components/FindBar'
 import AISidebar from './components/AISidebar'
+import HistoryPanel from './components/HistoryPanel'
+import BookmarksPanel from './components/BookmarksPanel'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
 import { GenerateRecipeRequest } from '../shared/ai'
 import { getVisualEditScript } from './visual-edit/inject'
 
-type SidePanel = 'recipes' | 'settings' | 'ai' | null
+type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | null
 
 export default function App() {
   const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab } = useTabs()
@@ -354,6 +356,8 @@ export default function App() {
         onSettingsClick={() => togglePanel('settings')}
         onAiClick={() => togglePanel('ai')}
         onXrayClick={toggleXray}
+        onHistoryClick={() => togglePanel('history')}
+        onBookmarksClick={() => togglePanel('bookmarks')}
         recipeCount={activeRecipes.length}
         xrayActive={xrayActive}
       />
@@ -431,6 +435,18 @@ export default function App() {
           )}
           {sidePanel === 'settings' && (
             <SettingsPanel onClose={() => setSidePanel(null)} />
+          )}
+          {sidePanel === 'history' && (
+            <HistoryPanel
+              onNavigate={handleNavigate}
+              onClose={() => setSidePanel(null)}
+            />
+          )}
+          {sidePanel === 'bookmarks' && (
+            <BookmarksPanel
+              onNavigate={handleNavigate}
+              onClose={() => setSidePanel(null)}
+            />
           )}
           {sidePanel === 'ai' && (
             <AISidebar
