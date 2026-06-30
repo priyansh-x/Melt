@@ -1263,8 +1263,25 @@ body {
   color: var(--text-primary);
   letter-spacing: -0.03em;
   text-align: center;
-  margin: 0 0 24px;
+  margin: 0 0 4px;
   opacity: 0.8;
+}
+
+.newtab-greeting {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+.newtab-stats {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 
 .newtab-search {
@@ -1555,4 +1572,87 @@ body {
   justify-content: center;
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Command Palette */
+.command-palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+.command-palette {
+  width: 520px;
+  max-height: 400px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.command-palette-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.command-palette-input::placeholder { color: var(--text-muted); }
+
+.command-palette-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.command-palette-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.command-palette-item.selected {
+  background: rgba(168, 85, 247, 0.12);
+}
+
+.command-palette-category {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 60px;
+}
+
+.command-palette-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.command-palette-shortcut {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--hover);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.command-palette-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
 }

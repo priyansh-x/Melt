@@ -14,6 +14,7 @@ import NewTabPage from './components/NewTabPage'
 import DownloadBar from './components/DownloadBar'
 import StatusBar from './components/StatusBar'
 import ShortcutsOverlay from './components/ShortcutsOverlay'
+import CommandPalette from './components/CommandPalette'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
 import { useShortcuts } from './hooks/useShortcuts'
@@ -37,6 +38,7 @@ export default function App() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(0)
   const [mutedTabs, setMutedTabs] = useState<Set<string>>(new Set())
+  const [showCommandPalette, setShowCommandPalette] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiResult, setAiResult] = useState<string | null>(null)
@@ -46,6 +48,10 @@ export default function App() {
       if ((e.metaKey || e.ctrlKey) && e.key === '/') {
         e.preventDefault()
         setShowShortcuts(prev => !prev)
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'p') {
+        e.preventDefault()
+        setShowCommandPalette(prev => !prev)
       }
       if (e.key === 'Escape' && showShortcuts) setShowShortcuts(false)
     }
@@ -594,6 +600,42 @@ export default function App() {
       {xrayActive && (
         <div className="xray-indicator" style={{ bottom: '80px' }}>X-ray Mode</div>
       )}
+      <CommandPalette
+        visible={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        actions={[
+          { id: 'new-tab', label: 'New Tab', shortcut: '⌘T', category: 'Tab', action: () => newTab() },
+          { id: 'close-tab', label: 'Close Tab', shortcut: '⌘W', category: 'Tab', action: () => closeTab(activeTabId) },
+          { id: 'recipes', label: 'Open Recipes', category: 'Panel', action: () => togglePanel('recipes') },
+          { id: 'ai', label: 'Open AI Chat', category: 'Panel', action: () => togglePanel('ai') },
+          { id: 'history', label: 'Open History', category: 'Panel', action: () => togglePanel('history') },
+          { id: 'bookmarks', label: 'Open Bookmarks', category: 'Panel', action: () => togglePanel('bookmarks') },
+          { id: 'settings', label: 'Open Settings', category: 'Panel', action: () => togglePanel('settings') },
+          { id: 'visual-edit', label: 'Toggle Visual Edit', category: 'Mode', action: toggleVisualEdit },
+          { id: 'xray', label: 'Toggle X-ray', category: 'Mode', action: toggleXray },
+          { id: 'reader', label: 'Reader Mode', category: 'Mode', action: toggleReaderMode },
+          { id: 'screenshot', label: 'Take Screenshot', category: 'Tool', action: takeScreenshot },
+          { id: 'find', label: 'Find in Page', shortcut: '⌘F', category: 'Tool', action: () => setShowFindBar(true) },
+          { id: 'shortcuts', label: 'Keyboard Shortcuts', shortcut: '⌘/', category: 'Help', action: () => setShowShortcuts(true) },
+          { id: 'devtools', label: 'Toggle DevTools', shortcut: '⌘⌥I', category: 'Dev', action: () => {
+            const wv = getActiveWebview()
+            if (wv) wv.isDevToolsOpened() ? wv.closeDevTools() : wv.openDevTools()
+          }},
+          { id: 'revert', label: 'Revert All Recipes', category: 'Recipe', action: handleRevertAll },
+          { id: 'zoom-in', label: 'Zoom In', shortcut: '⌘+', category: 'View', action: () => {
+            const wv = getActiveWebview()
+            if (wv) { const n = zoomLevel + 1; setZoomLevel(n); wv.setZoomLevel(n) }
+          }},
+          { id: 'zoom-out', label: 'Zoom Out', shortcut: '⌘-', category: 'View', action: () => {
+            const wv = getActiveWebview()
+            if (wv) { const n = zoomLevel - 1; setZoomLevel(n); wv.setZoomLevel(n) }
+          }},
+          { id: 'zoom-reset', label: 'Reset Zoom', shortcut: '⌘0', category: 'View', action: () => {
+            const wv = getActiveWebview()
+            if (wv) { setZoomLevel(0); wv.setZoomLevel(0) }
+          }},
+        ]}
+      />
     </div>
   )
 }
