@@ -21,6 +21,15 @@ function getDb(): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_history_visited ON history(visitedAt DESC);
     CREATE INDEX IF NOT EXISTS idx_history_url ON history(url);
 
+    CREATE TABLE IF NOT EXISTS page_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      url TEXT NOT NULL,
+      note TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_notes_url ON page_notes(url);
+
     CREATE TABLE IF NOT EXISTS bookmarks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       url TEXT NOT NULL UNIQUE,
@@ -70,4 +79,36 @@ export function removeBookmark(url: string): boolean {
 
 export function isBookmarked(url: string): boolean {
   return !!getDb().prepare('SELECT 1 FROM bookmarks WHERE url = ?').get(url)
+}
+
+export interface PageNote {
+  id: number
+  url: string
+  note: string
+  createdAt: string
+  updatedAt: string
+}
+
+export function getNotesForUrl(url: string): PageNote[] {
+  return getDb().prepare('SELECT * FROM page_notes WHERE url = ? ORDER BY updatedAt DESC').all(url) as PageNote[]
+}
+
+export function addNote(url: string, note: string): PageNote {
+  const now = new Date().toISOString()
+  const result = getDb().prepare(
+    'INSERT INTO page_notes (url, note, createdAt, updatedAt) VALUES (?, ?, ?, ?)'
+  ).run(url, note, now, now)
+  return { id: result.lastInsertRowid as number, url, note, createdAt: now, updatedAt: now }
+}
+
+export function updateNote(id: number, note: string) {
+  getDb().prepare('UPDATE page_notes SET note = ?, updatedAt = ? WHERE id = ?').run(note, new Date().toISOString(), id)
+}
+
+export function deleteNote(id: number) {
+  getDb().prepare('DELETE FROM page_notes WHERE id = ?').run(id)
+}
+
+export function getAllNotes(): PageNote[] {
+  return getDb().prepare('SELECT * FROM page_notes ORDER BY updatedAt DESC').all() as PageNote[]
 }

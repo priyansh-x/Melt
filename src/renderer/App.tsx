@@ -12,6 +12,7 @@ import HistoryPanel from './components/HistoryPanel'
 import BookmarksPanel from './components/BookmarksPanel'
 import NewTabPage from './components/NewTabPage'
 import DownloadBar from './components/DownloadBar'
+import NotesPanel from './components/NotesPanel'
 import StatusBar from './components/StatusBar'
 import ShortcutsOverlay from './components/ShortcutsOverlay'
 import CommandPalette from './components/CommandPalette'
@@ -23,7 +24,7 @@ import { getVisualEditScript } from './visual-edit/inject'
 import { getReaderModeScript } from './visual-edit/reader-mode'
 import { getCopyAsMarkdownScript } from './visual-edit/copy-markdown'
 
-type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | null
+type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
 export default function App() {
   const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab, pinTab, duplicateTab } = useTabs()
@@ -423,6 +424,7 @@ export default function App() {
             else wv.openDevTools()
           }
         }}
+        onNotesClick={() => togglePanel('notes')}
         onReaderMode={toggleReaderMode}
         onScreenshot={takeScreenshot}
         recipeCount={activeRecipes.length}
@@ -605,6 +607,12 @@ export default function App() {
               onClose={() => setSidePanel(null)}
             />
           )}
+          {sidePanel === 'notes' && (
+            <NotesPanel
+              currentUrl={activeTab?.url || ''}
+              onClose={() => setSidePanel(null)}
+            />
+          )}
         </div>
         <StatusBar
           url={activeTab?.url || ''}
@@ -640,6 +648,7 @@ export default function App() {
           { id: 'history', label: 'Open History', category: 'Panel', action: () => togglePanel('history') },
           { id: 'bookmarks', label: 'Open Bookmarks', category: 'Panel', action: () => togglePanel('bookmarks') },
           { id: 'settings', label: 'Open Settings', category: 'Panel', action: () => togglePanel('settings') },
+          { id: 'notes', label: 'Open Notes', category: 'Panel', action: () => togglePanel('notes') },
           { id: 'visual-edit', label: 'Toggle Visual Edit', category: 'Mode', action: toggleVisualEdit },
           { id: 'xray', label: 'Toggle X-ray', category: 'Mode', action: toggleXray },
           { id: 'reader', label: 'Reader Mode', category: 'Mode', action: toggleReaderMode },
