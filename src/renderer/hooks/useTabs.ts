@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
-import { TabData } from '../../shared/ipc'
+import { TabData, TabGroup } from '../../shared/ipc'
+
+const GROUP_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899']
 
 let tabCounter = 0
 
@@ -65,6 +67,32 @@ export function useTabs() {
     })
   }, [])
 
+  const [tabGroups, setTabGroups] = useState<TabGroup[]>([])
+
+  const createTabGroup = useCallback((name: string, tabIds: string[]) => {
+    const group: TabGroup = {
+      id: `group-${Date.now()}`,
+      name,
+      color: GROUP_COLORS[tabGroups.length % GROUP_COLORS.length],
+    }
+    setTabGroups(prev => [...prev, group])
+    setTabs(prev => prev.map(t => tabIds.includes(t.id) ? { ...t, groupId: group.id } : t))
+    return group
+  }, [tabGroups.length])
+
+  const addTabToGroup = useCallback((tabId: string, groupId: string) => {
+    setTabs(prev => prev.map(t => t.id === tabId ? { ...t, groupId } : t))
+  }, [])
+
+  const removeTabFromGroup = useCallback((tabId: string) => {
+    setTabs(prev => prev.map(t => t.id === tabId ? { ...t, groupId: undefined } : t))
+  }, [])
+
+  const deleteTabGroup = useCallback((groupId: string) => {
+    setTabGroups(prev => prev.filter(g => g.id !== groupId))
+    setTabs(prev => prev.map(t => t.groupId === groupId ? { ...t, groupId: undefined } : t))
+  }, [])
+
   const duplicateTab = useCallback((id: string): string | undefined => {
     const source = tabs.find(t => t.id === id)
     if (!source) return undefined
@@ -86,5 +114,10 @@ export function useTabs() {
     updateTab,
     pinTab,
     duplicateTab,
+    tabGroups,
+    createTabGroup,
+    addTabToGroup,
+    removeTabFromGroup,
+    deleteTabGroup,
   }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TabData } from '../../shared/ipc'
+import { TabData, TabGroup } from '../../shared/ipc'
 
 interface Props {
   tabs: TabData[]
@@ -11,9 +11,10 @@ interface Props {
   onDuplicate?: (id: string) => void
   onMute?: (id: string) => void
   mutedTabs?: Set<string>
+  tabGroups?: TabGroup[]
 }
 
-export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, onPin, onDuplicate, onMute, mutedTabs }: Props) {
+export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, onPin, onDuplicate, onMute, mutedTabs, tabGroups }: Props) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: string } | null>(null)
 
   function handleContextMenu(e: React.MouseEvent, tabId: string) {
@@ -36,6 +37,7 @@ export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, 
             className={`tab ${tab.id === activeTabId ? 'active' : ''} ${tab.isPinned ? 'pinned' : ''}`}
             onClick={() => onSwitch(tab.id)}
             onContextMenu={(e) => handleContextMenu(e, tab.id)}
+            style={tab.groupId ? { borderTop: `2px solid ${tabGroups?.find(g => g.id === tab.groupId)?.color || 'transparent'}` } : undefined}
           >
             {tab.favicon ? (
               <img className="tab-favicon" src={tab.favicon} alt="" />

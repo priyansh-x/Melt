@@ -27,7 +27,7 @@ import { getCopyAsMarkdownScript } from './visual-edit/copy-markdown'
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
 export default function App() {
-  const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab, pinTab, duplicateTab } = useTabs()
+  const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab, pinTab, duplicateTab, tabGroups, createTabGroup } = useTabs()
   const { allRecipes, activeRecipes, createRecipe, updateRecipe, toggleRecipe, deleteRecipe, refresh } = useRecipes(activeTab?.url || '')
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const urlBarRef = useRef<HTMLInputElement>(null)
@@ -328,6 +328,20 @@ export default function App() {
     } catch {}
   }
 
+  async function togglePictureInPicture() {
+    const wv = getActiveWebview()
+    if (!wv) return
+    await wv.executeJavaScript(`(function() {
+      var video = document.querySelector('video');
+      if (!video) { alert('No video found on this page'); return; }
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture();
+      } else {
+        video.requestPictureInPicture().catch(function(e) { console.error(e); });
+      }
+    })()`)
+  }
+
   async function copyAsMarkdown() {
     const wv = getActiveWebview()
     if (wv) await wv.executeJavaScript(getCopyAsMarkdownScript())
@@ -492,6 +506,7 @@ export default function App() {
               return next
             })
           }}
+          tabGroups={tabGroups}
         />
         <FindBar
           visible={showFindBar}
@@ -654,6 +669,14 @@ export default function App() {
           { id: 'reader', label: 'Reader Mode', category: 'Mode', action: toggleReaderMode },
           { id: 'screenshot', label: 'Take Screenshot', category: 'Tool', action: takeScreenshot },
           { id: 'copy-md', label: 'Copy Page as Markdown', category: 'Tool', action: copyAsMarkdown },
+          { id: 'pip', label: 'Picture-in-Picture', category: 'Tool', action: togglePictureInPicture },
+          { id: 'print', label: 'Print Page', category: 'Tool', action: () => getActiveWebview()?.print() },
+          { id: 'copy-url', label: 'Copy Page URL', category: 'Tool', action: () => {
+            if (activeTab?.url) navigator.clipboard.writeText(activeTab.url)
+          }},
+          { id: 'copy-title', label: 'Copy Page Title', category: 'Tool', action: () => {
+            if (activeTab?.title) navigator.clipboard.writeText(activeTab.title)
+          }},
           { id: 'find', label: 'Find in Page', shortcut: '⌘F', category: 'Tool', action: () => setShowFindBar(true) },
           { id: 'shortcuts', label: 'Keyboard Shortcuts', shortcut: '⌘/', category: 'Help', action: () => setShowShortcuts(true) },
           { id: 'devtools', label: 'Toggle DevTools', shortcut: '⌘⌥I', category: 'Dev', action: () => {
