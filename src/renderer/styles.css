@@ -1646,6 +1646,36 @@ body {
   font-weight: 500;
 }
 
+/* Presentation mode */
+.presentation-mode .side-rail,
+.presentation-mode .title-bar,
+.presentation-mode .tab-strip,
+.presentation-mode .status-bar,
+.presentation-mode .prompt-bar,
+.presentation-mode .revert-banner,
+.presentation-mode .find-bar { display: none !important; }
+
+.presentation-mode .main-area { margin: 0; }
+.presentation-mode .content-area { height: 100vh; }
+
+.presentation-exit {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: rgba(0,0,0,0.8);
+  color: #888;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 0 0 6px 6px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  cursor: pointer;
+}
+
+.presentation-exit:hover { opacity: 1; }
+
 /* Command Palette */
 .command-palette-overlay {
   position: fixed;

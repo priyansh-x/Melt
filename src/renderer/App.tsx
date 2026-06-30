@@ -46,6 +46,7 @@ export default function App() {
   const [mutedTabs, setMutedTabs] = useState<Set<string>>(new Set())
   const [showCommandPalette, setShowCommandPalette] = useState(false)
   const [splitTabId, setSplitTabId] = useState<string | null>(null)
+  const [presentationMode, setPresentationMode] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiResult, setAiResult] = useState<string | null>(null)
@@ -61,6 +62,7 @@ export default function App() {
         setShowCommandPalette(prev => !prev)
       }
       if (e.key === 'Escape' && showShortcuts) setShowShortcuts(false)
+      if (e.key === 'Escape' && presentationMode) setPresentationMode(false)
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
@@ -432,7 +434,12 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${presentationMode ? 'presentation-mode' : ''}`}>
+      {presentationMode && (
+        <div className="presentation-exit" onClick={() => setPresentationMode(false)}>
+          Press Esc to exit presentation mode
+        </div>
+      )}
       <SideRail
         onRecipesClick={() => togglePanel('recipes')}
         onSettingsClick={() => togglePanel('settings')}
@@ -682,6 +689,7 @@ export default function App() {
           { id: 'color-picker', label: 'Color Picker', category: 'Tool', action: () => getActiveWebview()?.executeJavaScript(getColorPickerScript()) },
           { id: 'scroll-top', label: 'Scroll to Top', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:0,behavior:"smooth"})') },
           { id: 'scroll-bottom', label: 'Scroll to Bottom', category: 'Nav', action: () => getActiveWebview()?.executeJavaScript('window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"})') },
+          { id: 'presentation', label: 'Presentation Mode', category: 'View', action: () => setPresentationMode(p => !p) },
           { id: 'fullscreen', label: 'Toggle Fullscreen', category: 'View', action: () => {
             if (document.fullscreenElement) document.exitFullscreen()
             else document.documentElement.requestFullscreen()
