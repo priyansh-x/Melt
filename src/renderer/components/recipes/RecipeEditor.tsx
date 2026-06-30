@@ -28,6 +28,7 @@ export default function RecipeEditor({ currentUrl, onSave, onCancel }: Props) {
       urlPattern,
       css,
       js,
+      domActions: '[]',
       enabled: true,
     })
   }

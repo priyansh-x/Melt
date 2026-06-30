@@ -1,6 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { TabData } from '../../shared/ipc'
 import { Recipe } from '../../shared/recipe'
+import { getDomActionsScript } from '../visual-edit/inject'
 
 interface Props {
   tab: TabData
@@ -99,6 +100,12 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
         if (recipe.js) {
           try {
             await wv.executeJavaScript(recipe.js)
+          } catch {}
+        }
+        // Inject DOM actions
+        if (recipe.domActions && recipe.domActions !== '[]') {
+          try {
+            await wv.executeJavaScript(getDomActionsScript(recipe.domActions))
           } catch {}
         }
       }

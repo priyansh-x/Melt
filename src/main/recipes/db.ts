@@ -19,11 +19,19 @@ function getDb(): Database.Database {
       urlPattern TEXT NOT NULL,
       css TEXT DEFAULT '',
       js TEXT DEFAULT '',
+      domActions TEXT DEFAULT '[]',
       enabled INTEGER DEFAULT 1,
       createdAt INTEGER NOT NULL,
       updatedAt INTEGER NOT NULL
     )
   `)
+
+  // Migration: add domActions column if missing
+  try {
+    db.prepare("SELECT domActions FROM recipes LIMIT 1").get()
+  } catch {
+    db.exec("ALTER TABLE recipes ADD COLUMN domActions TEXT DEFAULT '[]'")
+  }
 
   return db
 }
@@ -47,8 +55,8 @@ export function createRecipe(data: RecipeCreate): Recipe {
   }
 
   getDb().prepare(`
-    INSERT INTO recipes (id, name, urlPattern, css, js, enabled, createdAt, updatedAt)
-    VALUES (@id, @name, @urlPattern, @css, @js, @enabled, @createdAt, @updatedAt)
+    INSERT INTO recipes (id, name, urlPattern, css, js, domActions, enabled, createdAt, updatedAt)
+    VALUES (@id, @name, @urlPattern, @css, @js, @domActions, @createdAt, @updatedAt)
   `).run(recipe)
 
   return recipe
@@ -61,7 +69,7 @@ export function updateRecipe(data: RecipeUpdate): Recipe | null {
   const updated = { ...existing, ...data, updatedAt: Date.now() }
   getDb().prepare(`
     UPDATE recipes SET name=@name, urlPattern=@urlPattern, css=@css, js=@js,
-    enabled=@enabled, updatedAt=@updatedAt WHERE id=@id
+    domActions=@domActions, enabled=@enabled, updatedAt=@updatedAt WHERE id=@id
   `).run(updated)
 
   return updated

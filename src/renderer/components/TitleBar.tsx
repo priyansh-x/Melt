@@ -11,6 +11,8 @@ interface Props {
   onReload: () => void
   onBookmarkToggle: () => void
   isBookmarked: boolean
+  onVisualEditToggle: () => void
+  isVisualEditActive: boolean
   urlBarRef?: RefObject<HTMLInputElement | null>
 }
 
@@ -25,6 +27,8 @@ export default function TitleBar({
   onReload,
   onBookmarkToggle,
   isBookmarked,
+  onVisualEditToggle,
+  isVisualEditActive,
   urlBarRef,
 }: Props) {
   const [inputValue, setInputValue] = useState('')
@@ -100,6 +104,26 @@ export default function TitleBar({
           spellCheck={false}
         />
       </div>
+
+      <button
+        className={`nav-btn visual-edit-btn ${isVisualEditActive ? 'active' : ''}`}
+        onClick={onVisualEditToggle}
+        aria-label={isVisualEditActive ? 'Exit Visual Edit' : 'Visual Edit Mode'}
+        title={isVisualEditActive ? 'Exit Visual Edit (Esc)' : 'Visual Edit Mode'}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          {isVisualEditActive ? (
+            <>
+              <path d="M18 6L6 18M6 6l12 12" />
+            </>
+          ) : (
+            <>
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </>
+          )}
+        </svg>
+      </button>
 
       <button
         className={`nav-btn bookmark-btn ${isBookmarked ? 'active' : ''}`}

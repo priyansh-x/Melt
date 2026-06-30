@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
-import { AI_IPC, GenerateRecipeRequest } from '../../shared/ai'
-import { generateRecipe, setApiKey } from './service'
+import { AI_IPC, GenerateRecipeRequest, ChatRequest } from '../../shared/ai'
+import { generateRecipe, chat, setApiKey } from './service'
 import { loadApiKey, saveApiKey } from './store'
 
 export function registerAIHandlers() {
@@ -9,6 +9,10 @@ export function registerAIHandlers() {
 
   ipcMain.handle(AI_IPC.GENERATE_RECIPE, async (_event, req: GenerateRecipeRequest) => {
     return generateRecipe(req)
+  })
+
+  ipcMain.handle(AI_IPC.CHAT, async (_event, req: ChatRequest) => {
+    return chat(req)
   })
 
   ipcMain.handle(AI_IPC.SET_API_KEY, async (_event, key: string) => {

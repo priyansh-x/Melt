@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { RECIPE_IPC, Recipe, RecipeCreate, RecipeUpdate } from '../shared/recipe'
-import { AI_IPC, GenerateRecipeRequest, GenerateRecipeResponse } from '../shared/ai'
+import { AI_IPC, GenerateRecipeRequest, GenerateRecipeResponse, ChatRequest, ChatResponse } from '../shared/ai'
 import { HISTORY_IPC, BOOKMARK_IPC, HistoryEntry, Bookmark } from '../shared/history'
 
 const api = {
@@ -26,6 +26,8 @@ const api = {
   ai: {
     generateRecipe: (req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> =>
       ipcRenderer.invoke(AI_IPC.GENERATE_RECIPE, req),
+    chat: (req: ChatRequest): Promise<ChatResponse> =>
+      ipcRenderer.invoke(AI_IPC.CHAT, req),
     setApiKey: (key: string): Promise<{ success: boolean }> =>
       ipcRenderer.invoke(AI_IPC.SET_API_KEY, key),
     getApiKey: (): Promise<string> =>

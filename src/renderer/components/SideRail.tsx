@@ -1,10 +1,13 @@
 interface Props {
   onRecipesClick: () => void
   onSettingsClick: () => void
+  onAiClick: () => void
+  onXrayClick: () => void
   recipeCount: number
+  xrayActive: boolean
 }
 
-export default function SideRail({ onRecipesClick, onSettingsClick, recipeCount }: Props) {
+export default function SideRail({ onRecipesClick, onSettingsClick, onAiClick, onXrayClick, recipeCount, xrayActive }: Props) {
   return (
     <div className="side-rail">
       <div className="rail-top">
@@ -30,6 +33,8 @@ export default function SideRail({ onRecipesClick, onSettingsClick, recipeCount 
           </svg>
         </button>
 
+        <div className="rail-divider" />
+
         <button className="rail-btn accent" onClick={onRecipesClick} aria-label="Recipes" style={{ position: 'relative' }}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5" />
@@ -37,6 +42,19 @@ export default function SideRail({ onRecipesClick, onSettingsClick, recipeCount 
           {recipeCount > 0 && (
             <span className="rail-badge">{recipeCount}</span>
           )}
+        </button>
+
+        <button className="rail-btn" onClick={onAiClick} aria-label="AI Assistant">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
+          </svg>
+        </button>
+
+        <button className={`rail-btn ${xrayActive ? 'accent' : ''}`} onClick={onXrayClick} aria-label="Page X-ray">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4M12 8h.01" />
+          </svg>
         </button>
       </div>
 
