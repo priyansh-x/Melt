@@ -9,9 +9,11 @@ interface Props {
   onNew: () => void
   onPin?: (id: string) => void
   onDuplicate?: (id: string) => void
+  onMute?: (id: string) => void
+  mutedTabs?: Set<string>
 }
 
-export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, onPin, onDuplicate }: Props) {
+export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, onPin, onDuplicate, onMute, mutedTabs }: Props) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: string } | null>(null)
 
   function handleContextMenu(e: React.MouseEvent, tabId: string) {
@@ -40,6 +42,7 @@ export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, 
             ) : (
               <div className="tab-favicon-placeholder" />
             )}
+            {mutedTabs?.has(tab.id) && <span className="tab-muted-icon" title="Muted">🔇</span>}
             {!tab.isPinned && <span className="tab-title">{tab.title || 'New Tab'}</span>}
             {!tab.isPinned && (
               <button
@@ -80,6 +83,11 @@ export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, 
             {onDuplicate && (
               <button onClick={() => { onDuplicate(contextMenu.tabId); closeContextMenu() }}>
                 Duplicate Tab
+              </button>
+            )}
+            {onMute && (
+              <button onClick={() => { onMute(contextMenu.tabId); closeContextMenu() }}>
+                {mutedTabs?.has(contextMenu.tabId) ? 'Unmute Tab' : 'Mute Tab'}
               </button>
             )}
             <button onClick={() => { onClose(contextMenu.tabId); closeContextMenu() }}>

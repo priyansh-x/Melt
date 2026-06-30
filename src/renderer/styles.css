@@ -314,6 +314,8 @@ body {
   flex-shrink: 0;
 }
 
+.tab-muted-icon { font-size: 9px; opacity: 0.6; margin-left: -2px; }
+
 .tab-title {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1140,7 +1142,38 @@ body {
 
 .revert-banner-count { color: var(--accent); font-weight: 500; }
 
-.revert-banner button {
+.revert-banner-recipes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.revert-recipe-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(168, 85, 247, 0.12);
+  border-radius: 10px;
+  font-size: 10px;
+  color: var(--accent);
+}
+
+.revert-recipe-chip button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.revert-recipe-chip button:hover { color: #ef4444; }
+
+.revert-banner > button {
   background: transparent;
   border: 1px solid rgba(239, 68, 68, 0.3);
   color: #ef4444;
@@ -1461,6 +1494,35 @@ body {
 }
 
 .download-bar-close:hover { color: #aaa; }
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.status-left, .status-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-loading { color: var(--accent); }
+
+.status-protocol { opacity: 0.7; }
+.status-protocol.secure { color: #22c55e; }
+
+.status-recipes { color: var(--accent); }
+
+.status-zoom { opacity: 0.7; }
 
 .newtab-tile-letter {
   width: 28px;

@@ -12,6 +12,7 @@ import HistoryPanel from './components/HistoryPanel'
 import BookmarksPanel from './components/BookmarksPanel'
 import NewTabPage from './components/NewTabPage'
 import DownloadBar from './components/DownloadBar'
+import StatusBar from './components/StatusBar'
 import ShortcutsOverlay from './components/ShortcutsOverlay'
 import { useTabs } from './hooks/useTabs'
 import { useRecipes } from './hooks/useRecipes'
@@ -34,6 +35,7 @@ export default function App() {
   const [xrayActive, setXrayActive] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(0)
+  const [mutedTabs, setMutedTabs] = useState<Set<string>>(new Set())
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiResult, setAiResult] = useState<string | null>(null)
@@ -438,6 +440,20 @@ export default function App() {
           onNew={() => newTab()}
           onPin={pinTab}
           onDuplicate={duplicateTab}
+          mutedTabs={mutedTabs}
+          onMute={(id) => {
+            const container = containerRefs.current.get(id)
+            const wv = container?.querySelector('webview') as Electron.WebviewTag | null
+            if (!wv) return
+            const isMuted = mutedTabs.has(id)
+            wv.setAudioMuted(!isMuted)
+            setMutedTabs(prev => {
+              const next = new Set(prev)
+              if (isMuted) next.delete(id)
+              else next.add(id)
+              return next
+            })
+          }}
         />
         <FindBar
           visible={showFindBar}
@@ -457,7 +473,14 @@ export default function App() {
         />
         {activeRecipes.length > 0 && (
           <div className="revert-banner">
-            <span><span className="revert-banner-count">{activeRecipes.length}</span> recipe(s) active on this page</span>
+            <div className="revert-banner-recipes">
+              {activeRecipes.map(r => (
+                <span key={r.id} className="revert-recipe-chip">
+                  {r.name}
+                  <button onClick={() => { deleteRecipe(r.id); getActiveWebview()?.reload() }} title={`Remove ${r.name}`}>×</button>
+                </span>
+              ))}
+            </div>
             <button onClick={handleRevertAll}>Revert All</button>
           </div>
         )}
@@ -525,6 +548,12 @@ export default function App() {
             />
           )}
         </div>
+        <StatusBar
+          url={activeTab?.url || ''}
+          recipeCount={activeRecipes.length}
+          isLoading={activeTab?.isLoading || false}
+          zoomLevel={zoomLevel}
+        />
         <DownloadBar />
         <PromptBar
           onSubmit={handleAiPrompt}
