@@ -137,7 +137,7 @@ async function chatClaude(req: ChatRequest): Promise<ChatResponse> {
 
 // --- Gemini implementation ---
 
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash']
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash-latest']
 
 async function geminiGenerate(systemPrompt: string, userPrompt: string): Promise<string> {
   if (!geminiClient) throw new Error('Gemini API key not set. Open Settings to add it.')

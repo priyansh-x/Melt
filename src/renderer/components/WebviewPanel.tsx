@@ -56,6 +56,9 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
 
     const onDomReady = () => {
       initialized.current = true
+      // Set a Chrome-like user agent so sites like YouTube don't block us
+      const chromeUA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36`
+      wv.setUserAgent(chromeUA)
       // Load pending URL if any
       const urlToLoad = pendingUrl.current || tab.url
       if (urlToLoad && urlToLoad !== 'melt://newtab' && urlToLoad !== 'about:blank') {
@@ -168,6 +171,7 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
       <webview
         src="about:blank"
         style={{ width: '100%', height: '100%' }}
+        partition="persist:melt"
         allowpopups={'true' as any}
       />
     </div>
