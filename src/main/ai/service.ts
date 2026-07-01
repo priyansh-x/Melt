@@ -137,7 +137,7 @@ async function chatClaude(req: ChatRequest): Promise<ChatResponse> {
 
 // --- Gemini implementation ---
 
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash-latest']
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
 
 async function geminiGenerate(systemPrompt: string, userPrompt: string): Promise<string> {
   if (!geminiClient) throw new Error('Gemini API key not set. Open Settings to add it.')
@@ -151,7 +151,7 @@ async function geminiGenerate(systemPrompt: string, userPrompt: string): Promise
       } catch (e: any) {
         const is429 = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('rate')
         if (is429 && attempt < 2) {
-          await new Promise(r => setTimeout(r, (attempt + 1) * 2000))
+          await new Promise(r => setTimeout(r, (attempt + 1) * 5000))
           continue
         }
         if (is429 && modelName !== GEMINI_MODELS[GEMINI_MODELS.length - 1]) {
@@ -165,7 +165,7 @@ async function geminiGenerate(systemPrompt: string, userPrompt: string): Promise
 }
 
 async function generateRecipeGemini(req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> {
-  const truncatedHtml = req.pageHtml.slice(0, 8000)
+  const truncatedHtml = req.pageHtml.slice(0, 4000)
   try {
     const text = await geminiGenerate(SYSTEM_PROMPT, `Page URL: ${req.url}\nPage title: ${req.pageTitle}\n\nPage HTML (truncated):\n${truncatedHtml}\n\nUser request: ${req.prompt}`)
     const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
@@ -191,7 +191,7 @@ async function chatGemini(req: ChatRequest): Promise<ChatResponse> {
   if (!geminiClient) {
     return { success: false, error: 'Gemini API key not set. Open Settings to add it.' }
   }
-  const truncatedHtml = req.pageHtml.slice(0, 6000)
+  const truncatedHtml = req.pageHtml.slice(0, 3000)
   const pageContext = `[Current page: ${req.url} — "${req.pageTitle}"]\n\nHTML (truncated):\n${truncatedHtml}`
   try {
     for (const modelName of GEMINI_MODELS) {
