@@ -15,21 +15,52 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
   const containerRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
   const tabId = useRef(tab.id)
+  const pendingUrl = useRef<string | null>(null)
   const injectedCssKeys = useRef<Map<string, string>>(new Map())
 
   useImperativeHandle(ref, () => containerRef.current!)
 
+  // Track URL changes — if URL changes while webview is ready, navigate to it
+  useEffect(() => {
+    if (!tab.url || tab.url === 'melt://newtab') return
+
+    const container = containerRef.current
+    if (!container) return
+    const wv = container.querySelector('webview') as Electron.WebviewTag | null
+    if (!wv) return
+
+    if (initialized.current) {
+      // Webview is ready — check if we need to navigate
+      try {
+        const currentUrl = wv.getURL()
+        if (currentUrl === 'about:blank' || currentUrl !== tab.url) {
+          wv.loadURL(tab.url)
+        }
+      } catch {
+        wv.loadURL(tab.url)
+      }
+    } else {
+      // Webview not ready yet — store pending URL
+      pendingUrl.current = tab.url
+    }
+  }, [tab.url])
+
   useEffect(() => {
     const container = containerRef.current
-    if (!container || initialized.current) return
+    if (!container) return
 
     const wv = container.querySelector('webview') as Electron.WebviewTag | null
     if (!wv) return
 
+    if (initialized.current) return
+
     const onDomReady = () => {
       initialized.current = true
-      if (tab.url && tab.url !== 'about:blank') {
-        wv.loadURL(tab.url)
+      // Load pending URL if any
+      const urlToLoad = pendingUrl.current || tab.url
+      if (urlToLoad && urlToLoad !== 'melt://newtab' && urlToLoad !== 'about:blank') {
+        wv.loadURL(urlToLoad)
+        pendingUrl.current = null
       }
     }
 
@@ -54,6 +85,7 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
     })
 
     wv.addEventListener('did-navigate', (e: any) => {
+      if (e.url === 'about:blank') return
       onUpdate(tabId.current, {
         url: e.url,
         canGoBack: wv.canGoBack(),
@@ -70,6 +102,7 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
     })
 
     wv.addEventListener('did-navigate-in-page', (e: any) => {
+      if (e.url === 'about:blank') return
       onUpdate(tabId.current, {
         url: e.url,
         canGoBack: wv.canGoBack(),
@@ -80,7 +113,7 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
     return () => {
       wv.removeEventListener('dom-ready', onDomReady)
     }
-  }, [tab.url, onUpdate])
+  }, [onUpdate])
 
   // Inject recipes when they change or page finishes loading
   useEffect(() => {
@@ -92,8 +125,7 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
     if (!wv) return
 
     const injectRecipes = async () => {
-      // Remove previously injected CSS
-      for (const [recipeId, cssKey] of injectedCssKeys.current) {
+      for (const [, cssKey] of injectedCssKeys.current) {
         try { wv.removeInsertedCSS(cssKey) } catch {}
       }
       injectedCssKeys.current.clear()
@@ -110,7 +142,6 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
             await wv.executeJavaScript(recipe.js)
           } catch {}
         }
-        // Inject DOM actions
         if (recipe.domActions && recipe.domActions !== '[]') {
           try {
             await wv.executeJavaScript(getDomActionsScript(recipe.domActions))
@@ -119,7 +150,6 @@ const WebviewPanel = forwardRef<HTMLDivElement, Props>(({ tab, isActive, onUpdat
       }
     }
 
-    // Wait a tick for the webview to be ready
     const timer = setTimeout(injectRecipes, 100)
     return () => clearTimeout(timer)
   }, [recipesToInject, isActive, tab.isLoading])

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { TabData, TabGroup } from '../../shared/ipc'
 
 interface Props {
@@ -10,12 +10,16 @@ interface Props {
   onPin?: (id: string) => void
   onDuplicate?: (id: string) => void
   onMute?: (id: string) => void
+  onSplitView?: (id: string) => void
+  onReorder?: (fromIndex: number, toIndex: number) => void
   mutedTabs?: Set<string>
   tabGroups?: TabGroup[]
 }
 
-export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, onPin, onDuplicate, onMute, mutedTabs, tabGroups }: Props) {
+export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, onPin, onDuplicate, onMute, onSplitView, onReorder, mutedTabs, tabGroups }: Props) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: string } | null>(null)
+  const dragIndex = useRef<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   function handleContextMenu(e: React.MouseEvent, tabId: string) {
     e.preventDefault()
@@ -26,17 +30,43 @@ export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, 
     setContextMenu(null)
   }
 
+  function handleDragStart(e: React.DragEvent, index: number) {
+    dragIndex.current = index
+    e.dataTransfer.effectAllowed = 'move'
+    ;(e.target as HTMLElement).style.opacity = '0.4'
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  function handleDragEnd(e: React.DragEvent) {
+    ;(e.target as HTMLElement).style.opacity = '1'
+    if (dragIndex.current !== null && dragOverIndex !== null && dragIndex.current !== dragOverIndex) {
+      onReorder?.(dragIndex.current, dragOverIndex)
+    }
+    dragIndex.current = null
+    setDragOverIndex(null)
+  }
+
   const contextTab = contextMenu ? tabs.find(t => t.id === contextMenu.tabId) : null
 
   return (
     <div className="tab-strip">
       <div className="tab-list">
-        {tabs.map((tab) => (
+        {tabs.map((tab, index) => (
           <div
             key={tab.id}
-            className={`tab ${tab.id === activeTabId ? 'active' : ''} ${tab.isPinned ? 'pinned' : ''}`}
+            className={`tab ${tab.id === activeTabId ? 'active' : ''} ${tab.isPinned ? 'pinned' : ''} ${dragOverIndex === index ? 'drag-over' : ''}`}
             onClick={() => onSwitch(tab.id)}
             onContextMenu={(e) => handleContextMenu(e, tab.id)}
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragEnd={handleDragEnd}
+            onDragLeave={() => setDragOverIndex(null)}
             style={tab.groupId ? { borderTop: `2px solid ${tabGroups?.find(g => g.id === tab.groupId)?.color || 'transparent'}` } : undefined}
           >
             {tab.favicon ? (
@@ -85,6 +115,11 @@ export default function TabStrip({ tabs, activeTabId, onSwitch, onClose, onNew, 
             {onDuplicate && (
               <button onClick={() => { onDuplicate(contextMenu.tabId); closeContextMenu() }}>
                 Duplicate Tab
+              </button>
+            )}
+            {onSplitView && (
+              <button onClick={() => { onSplitView(contextMenu.tabId); closeContextMenu() }}>
+                Open in Split View
               </button>
             )}
             {onMute && (

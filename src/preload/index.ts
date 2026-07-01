@@ -6,7 +6,9 @@ import { DOWNLOAD_IPC, DownloadItem } from '../shared/downloads'
 
 const api = {
   onShortcut: (channel: string, cb: () => void) => {
-    ipcRenderer.on(`shortcut:${channel}`, () => cb())
+    const handler = () => cb()
+    ipcRenderer.on(`shortcut:${channel}`, handler)
+    return () => { ipcRenderer.removeListener(`shortcut:${channel}`, handler) }
   },
 
   recipes: {

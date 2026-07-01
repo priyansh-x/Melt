@@ -298,6 +298,18 @@ body {
   border-bottom: none;
 }
 
+.tab.drag-over {
+  border-left: 2px solid var(--accent);
+}
+
+.tab[draggable] {
+  cursor: grab;
+}
+
+.tab[draggable]:active {
+  cursor: grabbing;
+}
+
 .tab-favicon {
   width: 14px;
   height: 14px;

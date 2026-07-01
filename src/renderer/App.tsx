@@ -44,7 +44,7 @@ import { getZIndexVizScript } from './visual-edit/zindex-viz'
 type SidePanel = 'recipes' | 'settings' | 'ai' | 'history' | 'bookmarks' | 'notes' | null
 
 export default function App() {
-  const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab, pinTab, duplicateTab, tabGroups, createTabGroup } = useTabs()
+  const { tabs, activeTabId, activeTab, newTab, closeTab, switchTab, updateTab, pinTab, duplicateTab, reorderTabs, tabGroups, createTabGroup } = useTabs()
   const { allRecipes, activeRecipes, createRecipe, updateRecipe, toggleRecipe, deleteRecipe, refresh } = useRecipes(activeTab?.url || '')
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const urlBarRef = useRef<HTMLInputElement>(null)
@@ -99,16 +99,8 @@ export default function App() {
 
   function handleNavigate(input: string) {
     const url = resolveUrl(input)
-
-    // If currently on newtab, update the tab URL so it transitions to webview
-    if (activeTab?.url === 'melt://newtab') {
-      updateTab(activeTabId, { url, isLoading: true })
-      return
-    }
-
-    const wv = getActiveWebview()
-    if (!wv) return
-    wv.loadURL(url)
+    // Always update tab URL — WebviewPanel watches tab.url changes and navigates
+    updateTab(activeTabId, { url, isLoading: true })
   }
 
   function handleBack() {
@@ -521,6 +513,11 @@ export default function App() {
           onNew={() => newTab()}
           onPin={pinTab}
           onDuplicate={duplicateTab}
+          onReorder={reorderTabs}
+          onSplitView={(id) => {
+            const newId = duplicateTab(id)
+            if (newId) setSplitTabId(newId)
+          }}
           mutedTabs={mutedTabs}
           onMute={(id) => {
             const container = containerRefs.current.get(id)

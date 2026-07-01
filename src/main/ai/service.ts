@@ -137,15 +137,37 @@ async function chatClaude(req: ChatRequest): Promise<ChatResponse> {
 
 // --- Gemini implementation ---
 
-async function generateRecipeGemini(req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> {
-  if (!geminiClient) {
-    return { success: false, error: 'Gemini API key not set. Open Settings to add it.' }
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash']
+
+async function geminiGenerate(systemPrompt: string, userPrompt: string): Promise<string> {
+  if (!geminiClient) throw new Error('Gemini API key not set. Open Settings to add it.')
+
+  for (const modelName of GEMINI_MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const model = geminiClient.getGenerativeModel({ model: modelName, systemInstruction: systemPrompt })
+        const result = await model.generateContent(userPrompt)
+        return result.response.text()
+      } catch (e: any) {
+        const is429 = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('rate')
+        if (is429 && attempt < 2) {
+          await new Promise(r => setTimeout(r, (attempt + 1) * 2000))
+          continue
+        }
+        if (is429 && modelName !== GEMINI_MODELS[GEMINI_MODELS.length - 1]) {
+          break // try next model
+        }
+        throw e
+      }
+    }
   }
+  throw new Error('All Gemini models are rate-limited. Wait a minute and try again.')
+}
+
+async function generateRecipeGemini(req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> {
   const truncatedHtml = req.pageHtml.slice(0, 8000)
   try {
-    const model = geminiClient.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: SYSTEM_PROMPT })
-    const result = await model.generateContent(`Page URL: ${req.url}\nPage title: ${req.pageTitle}\n\nPage HTML (truncated):\n${truncatedHtml}\n\nUser request: ${req.prompt}`)
-    const text = result.response.text()
+    const text = await geminiGenerate(SYSTEM_PROMPT, `Page URL: ${req.url}\nPage title: ${req.pageTitle}\n\nPage HTML (truncated):\n${truncatedHtml}\n\nUser request: ${req.prompt}`)
     const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const parsed = JSON.parse(cleaned)
     if (parsed.error) return { success: false, error: parsed.error }
@@ -172,18 +194,26 @@ async function chatGemini(req: ChatRequest): Promise<ChatResponse> {
   const truncatedHtml = req.pageHtml.slice(0, 6000)
   const pageContext = `[Current page: ${req.url} — "${req.pageTitle}"]\n\nHTML (truncated):\n${truncatedHtml}`
   try {
-    const model = geminiClient.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: CHAT_SYSTEM_PROMPT })
-    const chat = model.startChat({
-      history: req.messages.slice(0, -1).map((m, i) => ({
-        role: m.role === 'user' ? 'user' as const : 'model' as const,
-        parts: [{ text: i === 0 ? `${pageContext}\n\n${m.content}` : m.content }],
-      })),
-    })
-    const lastMsg = req.messages[req.messages.length - 1]
-    const prompt = req.messages.length === 1 ? `${pageContext}\n\n${lastMsg.content}` : lastMsg.content
-    const result = await chat.sendMessage(prompt)
-    const text = result.response.text()
-    return parseRecipeResponse(text, req.url)
+    for (const modelName of GEMINI_MODELS) {
+      try {
+        const model = geminiClient.getGenerativeModel({ model: modelName, systemInstruction: CHAT_SYSTEM_PROMPT })
+        const chat = model.startChat({
+          history: req.messages.slice(0, -1).map((m, i) => ({
+            role: m.role === 'user' ? 'user' as const : 'model' as const,
+            parts: [{ text: i === 0 ? `${pageContext}\n\n${m.content}` : m.content }],
+          })),
+        })
+        const lastMsg = req.messages[req.messages.length - 1]
+        const prompt = req.messages.length === 1 ? `${pageContext}\n\n${lastMsg.content}` : lastMsg.content
+        const result = await chat.sendMessage(prompt)
+        return parseRecipeResponse(result.response.text(), req.url)
+      } catch (e: any) {
+        const is429 = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('rate')
+        if (is429 && modelName !== GEMINI_MODELS[GEMINI_MODELS.length - 1]) continue
+        throw e
+      }
+    }
+    return { success: false, error: 'All models rate-limited. Wait a minute and try again.' }
   } catch (e: any) {
     return { success: false, error: e.message || 'Failed to get response' }
   }
