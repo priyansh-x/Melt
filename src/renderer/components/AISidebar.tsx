@@ -13,6 +13,7 @@ export default function AISidebar({ currentUrl, pageTitle, getPageHtml, onRecipe
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [provider, setProvider] = useState('gemini')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -22,6 +23,7 @@ export default function AISidebar({ currentUrl, pageTitle, getPageHtml, onRecipe
 
   useEffect(() => {
     inputRef.current?.focus()
+    ;(window as any).melt.ai.getProvider().then((p: string) => setProvider(p))
   }, [])
 
   async function handleSend(quickMessage?: string) {
@@ -78,6 +80,7 @@ export default function AISidebar({ currentUrl, pageTitle, getPageHtml, onRecipe
             <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5" />
           </svg>
           <span>Melt AI</span>
+          <span style={{ fontSize: 9, opacity: 0.5, marginLeft: 4, textTransform: 'uppercase' }}>{provider}</span>
         </div>
         <div className="ai-sidebar-actions">
           <button className="ai-sidebar-btn" onClick={() => setMessages([])} title="Clear chat">

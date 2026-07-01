@@ -1,14 +1,33 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { GenerateRecipeRequest, GenerateRecipeResponse, ChatRequest, ChatResponse } from '../../shared/ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import { AIProvider, GenerateRecipeRequest, GenerateRecipeResponse, ChatRequest, ChatResponse } from '../../shared/ai'
 
-let client: Anthropic | null = null
+let anthropicClient: Anthropic | null = null
+let geminiClient: GoogleGenerativeAI | null = null
+let currentProvider: AIProvider = 'gemini'
 
-export function setApiKey(key: string) {
-  client = new Anthropic({ apiKey: key })
+export function setProvider(provider: AIProvider) {
+  currentProvider = provider
 }
 
-export function getClient(): Anthropic | null {
-  return client
+export function getProvider(): AIProvider {
+  return currentProvider
+}
+
+export function setApiKey(key: string) {
+  if (currentProvider === 'claude') {
+    anthropicClient = new Anthropic({ apiKey: key })
+  } else {
+    geminiClient = new GoogleGenerativeAI(key)
+  }
+}
+
+export function setClaudeKey(key: string) {
+  anthropicClient = new Anthropic({ apiKey: key })
+}
+
+export function setGeminiKey(key: string) {
+  geminiClient = new GoogleGenerativeAI(key)
 }
 
 const SYSTEM_PROMPT = `You are Melt, an AI browser assistant that generates CSS and JavaScript customizations for web pages.
@@ -56,33 +75,26 @@ You can have natural conversations AND generate page customizations. Decide base
 
 Keep responses concise. You're inside a browser sidebar — space is limited.`
 
-export async function generateRecipe(req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> {
-  if (!client) {
-    return { success: false, error: 'API key not set. Open Settings to add your Claude API key.' }
+// --- Claude implementation ---
+
+async function generateRecipeClaude(req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> {
+  if (!anthropicClient) {
+    return { success: false, error: 'Claude API key not set. Open Settings to add it.' }
   }
-
   const truncatedHtml = req.pageHtml.slice(0, 8000)
-
   try {
-    const message = await client.messages.create({
+    const message = await anthropicClient.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: `Page URL: ${req.url}\nPage title: ${req.pageTitle}\n\nPage HTML (truncated):\n${truncatedHtml}\n\nUser request: ${req.prompt}`,
-        },
-      ],
+      messages: [{
+        role: 'user',
+        content: `Page URL: ${req.url}\nPage title: ${req.pageTitle}\n\nPage HTML (truncated):\n${truncatedHtml}\n\nUser request: ${req.prompt}`,
+      }],
     })
-
     const text = message.content[0].type === 'text' ? message.content[0].text : ''
     const parsed = JSON.parse(text)
-
-    if (parsed.error) {
-      return { success: false, error: parsed.error }
-    }
-
+    if (parsed.error) return { success: false, error: parsed.error }
     return {
       success: true,
       recipe: {
@@ -94,60 +106,121 @@ export async function generateRecipe(req: GenerateRecipeRequest): Promise<Genera
       },
     }
   } catch (e: any) {
-    if (e.message?.includes('JSON')) {
-      return { success: false, error: 'AI returned invalid response. Try rephrasing your request.' }
-    }
+    if (e.message?.includes('JSON')) return { success: false, error: 'AI returned invalid response. Try rephrasing.' }
     return { success: false, error: e.message || 'Failed to generate recipe' }
   }
 }
 
-export async function chat(req: ChatRequest): Promise<ChatResponse> {
-  if (!client) {
-    return { success: false, error: 'API key not set. Open Settings to add your Claude API key.' }
+async function chatClaude(req: ChatRequest): Promise<ChatResponse> {
+  if (!anthropicClient) {
+    return { success: false, error: 'Claude API key not set. Open Settings to add it.' }
   }
-
   const truncatedHtml = req.pageHtml.slice(0, 6000)
   const pageContext = `[Current page: ${req.url} — "${req.pageTitle}"]\n\nHTML (truncated):\n${truncatedHtml}`
-
   try {
     const messages = req.messages.map((m, i) => ({
       role: m.role as 'user' | 'assistant',
       content: i === 0 ? `${pageContext}\n\n${m.content}` : m.content,
     }))
-
-    const message = await client.messages.create({
+    const message = await anthropicClient.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
       system: CHAT_SYSTEM_PROMPT,
       messages,
     })
-
     const text = message.content[0].type === 'text' ? message.content[0].text : ''
-
-    // Check for recipe block
-    const recipeMatch = text.match(/```recipe\s*\n([\s\S]*?)\n```/)
-    if (recipeMatch) {
-      try {
-        const recipe = JSON.parse(recipeMatch[1])
-        const conversationalText = text.replace(/```recipe\s*\n[\s\S]*?\n```/, '').trim()
-        return {
-          success: true,
-          message: conversationalText || 'Applied the changes.',
-          recipe: {
-            name: recipe.name || 'AI Recipe',
-            css: recipe.css || '',
-            js: recipe.js || '',
-            domActions: recipe.domActions || '[]',
-            urlPattern: recipe.urlPattern || `*${(() => { try { return new URL(req.url).hostname } catch { return '*' } })()}*`,
-          },
-        }
-      } catch {
-        return { success: true, message: text }
-      }
-    }
-
-    return { success: true, message: text }
+    return parseRecipeResponse(text, req.url)
   } catch (e: any) {
     return { success: false, error: e.message || 'Failed to get response' }
   }
+}
+
+// --- Gemini implementation ---
+
+async function generateRecipeGemini(req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> {
+  if (!geminiClient) {
+    return { success: false, error: 'Gemini API key not set. Open Settings to add it.' }
+  }
+  const truncatedHtml = req.pageHtml.slice(0, 8000)
+  try {
+    const model = geminiClient.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: SYSTEM_PROMPT })
+    const result = await model.generateContent(`Page URL: ${req.url}\nPage title: ${req.pageTitle}\n\nPage HTML (truncated):\n${truncatedHtml}\n\nUser request: ${req.prompt}`)
+    const text = result.response.text()
+    const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const parsed = JSON.parse(cleaned)
+    if (parsed.error) return { success: false, error: parsed.error }
+    return {
+      success: true,
+      recipe: {
+        name: parsed.name || 'Untitled Recipe',
+        css: parsed.css || '',
+        js: parsed.js || '',
+        domActions: parsed.domActions || '[]',
+        urlPattern: parsed.urlPattern || `*${new URL(req.url).hostname}*`,
+      },
+    }
+  } catch (e: any) {
+    if (e.message?.includes('JSON')) return { success: false, error: 'AI returned invalid response. Try rephrasing.' }
+    return { success: false, error: e.message || 'Failed to generate recipe' }
+  }
+}
+
+async function chatGemini(req: ChatRequest): Promise<ChatResponse> {
+  if (!geminiClient) {
+    return { success: false, error: 'Gemini API key not set. Open Settings to add it.' }
+  }
+  const truncatedHtml = req.pageHtml.slice(0, 6000)
+  const pageContext = `[Current page: ${req.url} — "${req.pageTitle}"]\n\nHTML (truncated):\n${truncatedHtml}`
+  try {
+    const model = geminiClient.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: CHAT_SYSTEM_PROMPT })
+    const chat = model.startChat({
+      history: req.messages.slice(0, -1).map((m, i) => ({
+        role: m.role === 'user' ? 'user' as const : 'model' as const,
+        parts: [{ text: i === 0 ? `${pageContext}\n\n${m.content}` : m.content }],
+      })),
+    })
+    const lastMsg = req.messages[req.messages.length - 1]
+    const prompt = req.messages.length === 1 ? `${pageContext}\n\n${lastMsg.content}` : lastMsg.content
+    const result = await chat.sendMessage(prompt)
+    const text = result.response.text()
+    return parseRecipeResponse(text, req.url)
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to get response' }
+  }
+}
+
+// --- Shared helpers ---
+
+function parseRecipeResponse(text: string, url: string): ChatResponse {
+  const recipeMatch = text.match(/```recipe\s*\n([\s\S]*?)\n```/)
+  if (recipeMatch) {
+    try {
+      const recipe = JSON.parse(recipeMatch[1])
+      const conversationalText = text.replace(/```recipe\s*\n[\s\S]*?\n```/, '').trim()
+      return {
+        success: true,
+        message: conversationalText || 'Applied the changes.',
+        recipe: {
+          name: recipe.name || 'AI Recipe',
+          css: recipe.css || '',
+          js: recipe.js || '',
+          domActions: recipe.domActions || '[]',
+          urlPattern: recipe.urlPattern || `*${(() => { try { return new URL(url).hostname } catch { return '*' } })()}*`,
+        },
+      }
+    } catch {
+      return { success: true, message: text }
+    }
+  }
+  return { success: true, message: text }
+}
+
+// --- Public API (routes to active provider) ---
+
+export async function generateRecipe(req: GenerateRecipeRequest): Promise<GenerateRecipeResponse> {
+  return currentProvider === 'claude' ? generateRecipeClaude(req) : generateRecipeGemini(req)
+}
+
+export async function chat(req: ChatRequest): Promise<ChatResponse> {
+  return currentProvider === 'claude' ? chatClaude(req) : chatGemini(req)
 }

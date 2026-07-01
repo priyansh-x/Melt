@@ -37,10 +37,14 @@ const api = {
       ipcRenderer.invoke(AI_IPC.GENERATE_RECIPE, req),
     chat: (req: ChatRequest): Promise<ChatResponse> =>
       ipcRenderer.invoke(AI_IPC.CHAT, req),
-    setApiKey: (key: string): Promise<{ success: boolean }> =>
-      ipcRenderer.invoke(AI_IPC.SET_API_KEY, key),
-    getApiKey: (): Promise<string> =>
-      ipcRenderer.invoke(AI_IPC.GET_API_KEY),
+    setApiKey: (key: string, provider?: string): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke(AI_IPC.SET_API_KEY, key, provider),
+    getApiKey: (provider?: string): Promise<string> =>
+      ipcRenderer.invoke(AI_IPC.GET_API_KEY, provider),
+    setProvider: (provider: string): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke(AI_IPC.SET_PROVIDER, provider),
+    getProvider: (): Promise<string> =>
+      ipcRenderer.invoke(AI_IPC.GET_PROVIDER),
   },
 
   history: {

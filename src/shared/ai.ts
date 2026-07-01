@@ -1,8 +1,12 @@
+export type AIProvider = 'gemini' | 'claude'
+
 export const AI_IPC = {
   GENERATE_RECIPE: 'ai:generate-recipe',
   CHAT: 'ai:chat',
   SET_API_KEY: 'ai:set-api-key',
   GET_API_KEY: 'ai:get-api-key',
+  SET_PROVIDER: 'ai:set-provider',
+  GET_PROVIDER: 'ai:get-provider',
 } as const
 
 export interface GenerateRecipeRequest {
