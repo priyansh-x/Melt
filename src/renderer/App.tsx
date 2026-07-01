@@ -144,6 +144,11 @@ export default function App() {
       getActiveWebview()?.setZoomLevel(0)
     },
     find: () => setShowFindBar(true),
+    commandPalette: () => setShowCommandPalette(prev => !prev),
+    aiPrompt: () => {
+      const promptEl = document.querySelector('.prompt-bar-input') as HTMLInputElement
+      if (promptEl) promptEl.focus()
+    },
   }), [tabs, activeTabId, newTab, closeTab, switchTab, getActiveWebview])
 
   useShortcuts(shortcuts)

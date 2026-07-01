@@ -72,6 +72,17 @@ function buildMenu() {
           accelerator: 'CmdOrCtrl+N',
           click: createWindow,
         },
+        { type: 'separator' },
+        {
+          label: 'Command Palette',
+          accelerator: 'CmdOrCtrl+Shift+P',
+          click: () => send('shortcut:command-palette'),
+        },
+        {
+          label: 'AI Prompt',
+          accelerator: 'CmdOrCtrl+K',
+          click: () => send('shortcut:ai-prompt'),
+        },
       ],
     },
     {

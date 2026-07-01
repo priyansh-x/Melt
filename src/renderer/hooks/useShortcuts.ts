@@ -13,6 +13,8 @@ interface ShortcutActions {
   zoomOut: () => void
   zoomReset: () => void
   find: () => void
+  commandPalette: () => void
+  aiPrompt: () => void
 }
 
 export function useShortcuts(actions: ShortcutActions) {
@@ -33,6 +35,8 @@ export function useShortcuts(actions: ShortcutActions) {
       melt.onShortcut('zoom-out', actions.zoomOut),
       melt.onShortcut('zoom-reset', actions.zoomReset),
       melt.onShortcut('find', actions.find),
+      melt.onShortcut('command-palette', actions.commandPalette),
+      melt.onShortcut('ai-prompt', actions.aiPrompt),
     ]
 
     return () => {
