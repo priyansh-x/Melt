@@ -1,9 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import https from 'https'
 import { AIProvider, GenerateRecipeRequest, GenerateRecipeResponse, ChatRequest, ChatResponse } from '../../shared/ai'
 
 let anthropicClient: Anthropic | null = null
-let geminiClient: GoogleGenerativeAI | null = null
+let geminiApiKey: string | null = null
 let currentProvider: AIProvider = 'gemini'
 
 export function setProvider(provider: AIProvider) {
@@ -18,7 +18,7 @@ export function setApiKey(key: string) {
   if (currentProvider === 'claude') {
     anthropicClient = new Anthropic({ apiKey: key })
   } else {
-    geminiClient = new GoogleGenerativeAI(key)
+    geminiApiKey = key
   }
 }
 
@@ -27,7 +27,7 @@ export function setClaudeKey(key: string) {
 }
 
 export function setGeminiKey(key: string) {
-  geminiClient = new GoogleGenerativeAI(key)
+  geminiApiKey = key
 }
 
 const SYSTEM_PROMPT = `You are Melt, an AI browser assistant that generates CSS and JavaScript customizations for web pages.
@@ -135,28 +135,56 @@ async function chatClaude(req: ChatRequest): Promise<ChatResponse> {
   }
 }
 
-// --- Gemini implementation ---
+// --- Gemini implementation (direct REST to avoid SDK fetch issues in Electron) ---
 
 const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
 
+function geminiRest(model: string, body: object): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body)
+    const req = https.request({
+      hostname: 'generativelanguage.googleapis.com',
+      path: `/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
+    }, (res) => {
+      let body = ''
+      res.on('data', (chunk: string) => { body += chunk })
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body)
+          if (json.error) {
+            reject(new Error(`[${json.error.code}] ${json.error.message}`))
+          } else {
+            resolve(json)
+          }
+        } catch { reject(new Error('Invalid JSON response from Gemini')) }
+      })
+    })
+    req.on('error', reject)
+    req.write(data)
+    req.end()
+  })
+}
+
 async function geminiGenerate(systemPrompt: string, userPrompt: string): Promise<string> {
-  if (!geminiClient) throw new Error('Gemini API key not set. Open Settings to add it.')
+  if (!geminiApiKey) throw new Error('Gemini API key not set. Open Settings to add it.')
 
   for (const modelName of GEMINI_MODELS) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const model = geminiClient.getGenerativeModel({ model: modelName, systemInstruction: systemPrompt })
-        const result = await model.generateContent(userPrompt)
-        return result.response.text()
+        const result = await geminiRest(modelName, {
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        })
+        return result.candidates?.[0]?.content?.parts?.[0]?.text || ''
       } catch (e: any) {
         const is429 = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('rate')
         if (is429 && attempt < 2) {
           await new Promise(r => setTimeout(r, (attempt + 1) * 5000))
           continue
         }
-        if (is429 && modelName !== GEMINI_MODELS[GEMINI_MODELS.length - 1]) {
-          break // try next model
-        }
+        if (is429 && modelName !== GEMINI_MODELS[GEMINI_MODELS.length - 1]) break
         throw e
       }
     }
@@ -188,25 +216,25 @@ async function generateRecipeGemini(req: GenerateRecipeRequest): Promise<Generat
 }
 
 async function chatGemini(req: ChatRequest): Promise<ChatResponse> {
-  if (!geminiClient) {
+  if (!geminiApiKey) {
     return { success: false, error: 'Gemini API key not set. Open Settings to add it.' }
   }
   const truncatedHtml = req.pageHtml.slice(0, 3000)
   const pageContext = `[Current page: ${req.url} — "${req.pageTitle}"]\n\nHTML (truncated):\n${truncatedHtml}`
   try {
+    const contents = req.messages.map((m, i) => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: i === 0 ? `${pageContext}\n\n${m.content}` : m.content }],
+    }))
+
     for (const modelName of GEMINI_MODELS) {
       try {
-        const model = geminiClient.getGenerativeModel({ model: modelName, systemInstruction: CHAT_SYSTEM_PROMPT })
-        const chat = model.startChat({
-          history: req.messages.slice(0, -1).map((m, i) => ({
-            role: m.role === 'user' ? 'user' as const : 'model' as const,
-            parts: [{ text: i === 0 ? `${pageContext}\n\n${m.content}` : m.content }],
-          })),
+        const result = await geminiRest(modelName, {
+          system_instruction: { parts: [{ text: CHAT_SYSTEM_PROMPT }] },
+          contents,
         })
-        const lastMsg = req.messages[req.messages.length - 1]
-        const prompt = req.messages.length === 1 ? `${pageContext}\n\n${lastMsg.content}` : lastMsg.content
-        const result = await chat.sendMessage(prompt)
-        return parseRecipeResponse(result.response.text(), req.url)
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text || ''
+        return parseRecipeResponse(text, req.url)
       } catch (e: any) {
         const is429 = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('rate')
         if (is429 && modelName !== GEMINI_MODELS[GEMINI_MODELS.length - 1]) continue
